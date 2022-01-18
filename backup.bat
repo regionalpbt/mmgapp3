@@ -1,0 +1,1 @@
+xcopy c:\dev\prod\* .  /Y /S  /EXCLUDE:C:\dev\prod\files.txt

@@ -1,0 +1,77 @@
+
+* Activate Environment
+python3 -m venv auth
+C:\dev\reactFlaskMsal>auth\scripts\activate
+
+* Run Flask
+set flask_debug=1
+flask run
+
+pip install -r requirements.txt 
+
+* List PIP libraries
+pip freeze > requirements.txt
+
+* Install react-app 
+cd frontend
+npx create-react-app .
+
+* Additional react app
+npm install react-loader-spinner --save
+npm install react-promise-tracker --save
+npm install react-router-dom 
+
+# Additional Python library  
+pip install python-dateutil - for converting data text to date object.
+
+
+* Starts the development server.
+  npm run build
+    po
+
+* git init may be required 
+git init
+
+* Remove git ignore cache
+git rm -rf --cached .
+git add .
+
+* Check git remote
+git remote -v 
+
+Please refer to Github.jpg for details on Github operation
+
+* Run React local (go to frontend directory)
+npm run start 
+
+
+echo "# mmgapp2" >> README.md
+git init
+git remote add origin https://github.com/vincentcccheng/mmgapp2.git
+git add .
+git commit -m "first commit"
+git push -u origin master
+
+
+***About Flask-Session***
+
+Original : Flask-Session==0.3.2
+New : pip install git+https://github.com/rayluo/flask-session.git@0.3.x
+
+REQUIREMENT:
+https://github.com/rayluo/flask-session
+
+package-foo==1.2.3
+git+https://github.com/rayluo/flask-session@0.3.x#egg=flask-session
+package-bar>=2,<3
+
+***Flask-Session***
+
+
+Here is the Power BI Report URL with Filter example:
+
+https://app.powerbi.com/reportEmbed?reportId=f0a7cd56-e22b-490a-9ad7-012d4a0d5251&autoAuth=true&filterPanelEnabled=False&pageName=ReportSectionf1be12cf083e1c0eba15&$filter=PID/PID eq '100002006'
+The space will be replaced by “%20” and ‘ will be replaced by “%27” after entering into web browser.
+
+Final Product:
+https://app.powerbi.com/reportEmbed?reportId=f0a7cd56-e22b-490a-9ad7-012d4a0d5251&autoAuth=true&filterPanelEnabled=False&pageName=ReportSectionf1be12cf083e1c0eba15&$filter=PID/PID%20eq%20%27100002006%27
