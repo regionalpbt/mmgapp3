@@ -264,6 +264,12 @@ def allowed_file(filename):
 def upload_file():
         if request.method == 'POST':
                 
+                #content = json.loads(request.headers['inspectionID'])
+                inspection_id = request.headers['inspection_id']
+                relative_url =  request.headers['relative_url']
+                
+                #print('Upload/Inspection_id is {0}, {1}, {2}'.format(inspection_id, su_no, mf_no))   
+                
                 # check if the post request has the files part
                 if 'files[]' not in request.files:
                         #flash('No file part')
@@ -273,13 +279,11 @@ def upload_file():
                 for file in files:                        
                         if file and allowed_file(file.filename):
                                 mimetype = file.content_type
-                                filename = file.filename   
-                                # fs = gridfs.GridFS(db)
-                                # id = fs.put(file, filename=filename)         
-
-                                inspection_id = '225233-1-F' 
-                                relative_url =  "2022inspRpt/SU22975MF36843"
-                                
+                                filename = file.filename                                 
+                                                                
+                                # inspection_id = '225233-1-F' 
+                                # relative_url =  "2022inspRpt/SU22975MF36843"
+                                                              
                                 target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
                                 ctx.execute_query()
 
@@ -336,7 +340,7 @@ def download_sharepoint_file():
       file_url = file_url.replace("#","%23")    ## replace character #  
       
       _response = File.open_binary(ctx, file_url)                 
-      data = io.BytesIO(_response.content)               
+      data = BytesIO(_response.content)               
       return send_file(data, attachment_filename='whatever.jpg', mimetype='image/jpg')                                                                 
 
     except:
@@ -1234,7 +1238,7 @@ def sharepointfiles():
                  "relative_path" : list_item.file.properties["ServerRelativeUrl"],
                  "unique_id": list_item.file.unique_id
             }             
-            print('id', list_item.file.unique_id)
+            #print('id', list_item.file.unique_id)
             sharePoint_array.append(sharePoint_items)
 
         if (sharePoint_array == []): 
