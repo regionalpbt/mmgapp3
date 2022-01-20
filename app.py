@@ -111,7 +111,7 @@ def check_logged(f):
     def wrapper(*args, **kwargs):
         #print("enter wrapper")
         if (os.environ['ENVIRONMENT']=="PROD"):
-            print("running check_logged to check whether it is logged")
+            #print("running check_logged to check whether it is logged")
             if not (request.headers.get('api')) and not session.get("user"):
                 return redirect(url_for("login"))
             if (request.headers.get('api')) and not session.get("user"):   

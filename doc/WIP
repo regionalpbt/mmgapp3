@@ -1,16 +1,15 @@
-wip 
-
-Work on grey graphic turned to strange  
-Check Correct Su/Mf no.
-Check MDC missing items 
-Not Found message in Item Total 
-
-
-
+WIP
+- Refresh for upload /   Upload first time auto refresh 
+- Clear file after upload
+- Fix SharePoint Date length and name 
 
 Enhancement
 - Upload and combine photos.
-- MQA to see all suppliers
+
+Done 
+- Check MDC missing items - done 
+- Not Found message in Item Total - done 
+- Work on grey graphic turned to strange  
 
 
 
