@@ -264,7 +264,9 @@ def allowed_file(filename):
 def upload_file():
         if request.method == 'POST':
                 
-                #content = json.loads(request.headers['inspectionID'])
+                
+                # inspection_id = '225233-1-F' 
+                # relative_url =  "2022inspRpt/SU22975MF36843"
                 inspection_id = request.headers['inspection_id']
                 relative_url =  request.headers['relative_url']
                 
@@ -280,9 +282,7 @@ def upload_file():
                         if file and allowed_file(file.filename):
                                 mimetype = file.content_type
                                 filename = file.filename                                 
-                                                                
-                                # inspection_id = '225233-1-F' 
-                                # relative_url =  "2022inspRpt/SU22975MF36843"
+                                                                                           
                                                               
                                 target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
                                 ctx.execute_query()
