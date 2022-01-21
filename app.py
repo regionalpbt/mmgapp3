@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import ssl
 import uuid
-from fastapi import exceptions
 import requests
 from flask import Flask, render_template, session, request, redirect, url_for, jsonify, send_from_directory, send_file
 from flask_session import Session  # https://pythonhosted.org/Flask-Session
@@ -98,7 +96,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes = int(os.environ['S
 Session(app)
 
 app.config['UPLOAD_FOLDER'] = '.'
-app.config['MAX_CONTENT_LENGTH'] = 18 * 1024    # 10K       
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024    # 10K       
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
