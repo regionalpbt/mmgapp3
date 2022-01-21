@@ -1184,9 +1184,14 @@ def sharepointfiles():
         content = request.get_json() #python data     
         folder = content['folder']
         inspection_id = content['inspection_id']
-        #relative_url = session["sharePointPath"] + "/" + folder 
+        
+        ## below are okay 
         sharePointReport = "9999 Inspection Report"
-        relative_url = "9999InspRpt" + "/" + folder 
+        relative_url = "9999InspRpt" + "/" + folder
+
+        ## below are getting from environment 
+        sharePointReport = os.environ['SHAREPOINT_REPORT']
+        relative_url = os.environ['SHAREPOINT_PATH'] + "/" + folder        
                 
         libraryRoot = ctx.web.get_folder_by_server_relative_path(relative_url)
 
