@@ -1184,10 +1184,9 @@ def sharepointfiles():
         content = request.get_json() #python data     
         folder = content['folder']
         inspection_id = content['inspection_id']
-        relative_url = session["sharePointPath"] + "/" + folder 
-        #relative_url = "9999InspRpt" + "/" + folder 
-        print('sharePointReport', session["sharePointReport"])
-        print('relative_url', relative_url)
+        #relative_url = session["sharePointPath"] + "/" + folder 
+        sharePointReport = "9999 Inspection Report"
+        relative_url = "9999InspRpt" + "/" + folder 
                 
         libraryRoot = ctx.web.get_folder_by_server_relative_path(relative_url)
 
@@ -1210,7 +1209,7 @@ def sharepointfiles():
     
         # 3 Retrieve list items based on the CAML query 
         #oList = ctx.web.lists.get_by_title('2022inspRpt') - title must match the list name in SharePoint
-        oList = ctx.web.lists.get_by_title(session["sharePointReport"]) 
+        oList = ctx.web.lists.get_by_title(sharePointReport) 
         items = oList.get_items(caml_query) 
         ctx.execute_query()
 
@@ -1222,7 +1221,7 @@ def sharepointfiles():
             _modified_by = item.properties["EditorId"]    
             _id  = item.properties["Id"]                
             list_item  = item.expand(["File"])
-            list_item = ctx.web.lists.get_by_title(session["sharePointReport"]).get_item_by_id(_id).expand(["File"])
+            list_item = ctx.web.lists.get_by_title(sharePointReport).get_item_by_id(_id).expand(["File"])
             ctx.load(list_item)
             ctx.execute_query()           
 
