@@ -1,7 +1,5 @@
 WIP
 - Refresh for upload /   Upload first time auto refresh 
-- Clear file after upload
-- Fix SharePoint Date length and name 
 - Data limit
 - SharePoint folder - change from 2022 to ....
 - Problem with no defects
@@ -9,12 +7,6 @@ WIP
 
 Enhancement
 - Upload and combine photos.
-
-Done 
-- Check MDC missing items - done 
-- Not Found message in Item Total - done 
-- Work on grey graphic turned to strange  
-
 
 
 
