@@ -309,20 +309,21 @@ def upload_file():
                                 
                                 list_item = upload_file.listItemAllFields # get associated list item 
                                 list_item.set_property("Inspection_x0020_ID", inspection_id)
-                                list_item.set_property("Inspection_x0020_Date", '11/9/21')
-                                
+                                list_item.set_property("Inspection_x0020_Date", '11/9/21')                                
                                 
                                 list_item.update()
                                 ctx.execute_query()
 
                                 newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
+                
+                return jsonify(newfiles),200
                           
             except Exception as e:   
                 if str(e)[0:3] == "413":        
                    return "File(s) exceed a size limit of 100K", 413
                 
             finally:
-                return jsonify(newfiles),200
+               pass
 
         else:
                 return "Upload Error", 406
