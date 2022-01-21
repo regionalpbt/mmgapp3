@@ -341,7 +341,8 @@ def download_sharepoint_file():
       
       _response = File.open_binary(ctx, file_url)                 
       data = BytesIO(_response.content)               
-      return send_file(data, attachment_filename='whatever.jpg', mimetype='image/jpg')                                                                 
+      return send_file(data, download_name='whatever.jpg', mimetype='image/jpg')                                                                 
+      #return send_file(data, attachment_filename='whatever.jpg', mimetype='image/jpg')                                                                 
 
     except:
       return ('Error')
@@ -353,7 +354,7 @@ def showPhoto():
          
       folder = request.args.get('folder')
       filename  = request.args.get('filename')
-      file_url = "/sites/OSO/2022InspRpt/" + folder + "/" + filename
+      file_url = "/sites/OSO/" + os.environ["SHAREPOINT_PATH"] + "/" + folder + "/" + filename
       #print("file_url" ,file_url)
       _response = File.open_binary(ctx, file_url)                 
       data = io.BytesIO(_response.content)               
