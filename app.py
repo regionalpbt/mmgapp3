@@ -1185,6 +1185,8 @@ def sharepointfiles():
         folder = content['folder']
         inspection_id = content['inspection_id']
         relative_url = session["sharePointPath"] + "/" + folder 
+
+        print('relative_url', relative_url)
                 
         libraryRoot = ctx.web.get_folder_by_server_relative_path(relative_url)
 
