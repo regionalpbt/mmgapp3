@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import ssl
 import uuid
+from fastapi import exceptions
 import requests
 from flask import Flask, render_template, session, request, redirect, url_for, jsonify, send_from_directory, send_file
 from flask_session import Session  # https://pythonhosted.org/Flask-Session
@@ -96,7 +98,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes = int(os.environ['S
 Session(app)
 
 app.config['UPLOAD_FOLDER'] = '.'
-app.config['MAX_CONTENT_LENGTH'] = 500 * 10240 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 18 * 1024    # 10K       
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
@@ -262,9 +264,10 @@ def allowed_file(filename):
 @app.route('/api/upload', methods=['POST'])
 @check_logged
 def upload_file():
+        
         if request.method == 'POST':
-                
-                
+              
+            try:    
                 # inspection_id = '225233-1-F' 
                 # relative_url =  "2022inspRpt/SU22975MF36843"
                 inspection_id = request.headers['inspection_id']
@@ -276,13 +279,13 @@ def upload_file():
                 if 'files[]' not in request.files:
                         #flash('No file part')
                         return "no files", 406
-                files = request.files.getlist('files[]')
+                files = request.files.getlist('files[]')                
                 newfiles = []
+
                 for file in files:                        
                         if file and allowed_file(file.filename):
                                 mimetype = file.content_type
-                                filename = file.filename                                 
-                                                                                           
+                                filename = file.filename                                                                 
                                                               
                                 target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
                                 ctx.execute_query()
@@ -315,8 +318,14 @@ def upload_file():
                                 ctx.execute_query()
 
                                 newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
+                                return jsonify(newfiles),200
+            except Exception as e:   
+                if str(e)[0:3] == "413":        
+                   return "File(s) exceed a size limit of 100K", 413
+                
+            finally:
+                pass
 
-                return jsonify(newfiles),200
         else:
                 return "Upload Error", 406
 
