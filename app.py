@@ -96,7 +96,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes = int(os.environ['S
 Session(app)
 
 app.config['UPLOAD_FOLDER'] = '.'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024    # 10K       
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024    # 100K       
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
@@ -316,13 +316,13 @@ def upload_file():
                                 ctx.execute_query()
 
                                 newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
-                                return jsonify(newfiles),200
+                          
             except Exception as e:   
                 if str(e)[0:3] == "413":        
                    return "File(s) exceed a size limit of 100K", 413
                 
             finally:
-                pass
+                return jsonify(newfiles),200
 
         else:
                 return "Upload Error", 406
