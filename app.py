@@ -362,7 +362,7 @@ def download_sharepoint_file():
       
       _response = File.open_binary(ctx, file_url)                 
       data = BytesIO(_response.content)               
-      return send_file(data, download_name='whatever.jpg', mimetype='image/jpg')                                                                 
+      return send_file(data, attachment_filename='whatever.jpg', mimetype='image/jpg')                                                                 
       #return send_file(data, attachment_filename='whatever.jpg', mimetype='image/jpg')                                                                 
 
     except:
