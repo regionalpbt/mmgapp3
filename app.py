@@ -14,11 +14,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 #below are additionals for React JS
-import pymongo
+#import pymongo
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
-import urllib   # may be needed for filling space in URL  
+#import urllib   # may be needed for filling space in URL  
 from werkzeug.utils import secure_filename
 import gridfs
 import io
@@ -41,7 +41,6 @@ import itertools
 from itertools import groupby
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string, get_column_letter
 
-#import datetime
 
 # Below for SahrePoint
 from office365.runtime.auth.authentication_context import AuthenticationContext
@@ -49,12 +48,8 @@ from office365.sharepoint.client_context import ClientContext
 from office365.sharepoint.files.file import File
 from office365.sharepoint.listitems.caml.caml_query import CamlQuery  
 from office365.runtime.http.request_options import RequestOptions
+from office365.sharepoint.files.file_creation_information import FileCreationInformation
 
-site_url = 'https://macysinc.sharepoint.com/sites/OSO/'
-app_principal = {
-     'client_id': os.environ['SHAREPOINT_CLIENT_ID'],
-     'client_secret': os.environ['SHAREPOINT_CLIENT_SECRET'],
-}
 
 #calcuate size
 #pip install python-dateutil
@@ -67,8 +62,17 @@ from dateutil import parser
 import folium
 from folium.features import DivIcon
 
-# FileCreationInfo for SharePoint file upload 
-from office365.sharepoint.files.file_creation_information import FileCreationInformation
+# for image and PDF processing
+from borb.pdf.document import Document
+from borb.pdf.page.page import Page
+from borb.pdf.canvas.layout.image.image import Image as BorbImage 
+from borb.pdf.canvas.layout.page_layout.multi_column_layout import SingleColumnLayout
+from borb.pdf.canvas.layout.text.paragraph import Paragraph
+from borb.pdf.canvas.layout.layout_element import Alignment  
+from decimal import Decimal
+from borb.pdf.pdf import PDF
+from io import BytesIO
+from PIL import Image, ImageFont, ImageDraw
 
 app = Flask(__name__, static_folder="frontend/build/static", template_folder="frontend/build")    #production 
     
@@ -77,12 +81,17 @@ app.config['SECRET_KEY']= os.environ['SECRET_KEY']
 cluster = MongoClient(os.environ['MONGODB_URL'], tls=True, tlsAllowInvalidCertificates=True,  maxPoolSize=100)
 
 db = cluster["qcDB"]
-    
+
+site_url = 'https://macysinc.sharepoint.com/sites/OSO/'
+app_principal = {
+     'client_id': os.environ['SHAREPOINT_CLIENT_ID'],
+     'client_secret': os.environ['SHAREPOINT_CLIENT_SECRET'],
+}
+
 context_auth = AuthenticationContext(url=site_url)
 context_auth.acquire_token_for_app(client_id=app_principal['client_id'], client_secret=app_principal['client_secret'])
     
 ctx = ClientContext(site_url, context_auth)
-
 
 app.config['SESSION_TYPE'] = 'mongodb'  
 app.config['SESSION_KEY_PREFIX'] = 'session:' 
@@ -253,10 +262,15 @@ def getTodayDate():
     return date.today().strftime("%m/%d/%y")  ## get today's date 
 
 
-ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif','xlsx', 'doc', 'docx', 'ppt', 'pptx'])
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'doc', 'docx', 'ppt', 'pptx'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+ALLOWED_PHOTOS = set(['png', 'jpg', 'jpeg'])
+
+def allowed_photos(filename):
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PHOTOS
 	
 
 @app.route('/api/upload', methods=['POST'])
@@ -270,6 +284,7 @@ def upload_file():
                 # relative_url =  "2022inspRpt/SU22975MF36843"
                 inspection_id = request.headers['inspection_id']
                 relative_url =  request.headers['relative_url']
+                inspection_date =  request.headers['inspection_date']
                 
                 #print('Upload/Inspection_id is {0}, {1}, {2}'.format(inspection_id, su_no, mf_no))   
                 
@@ -280,21 +295,19 @@ def upload_file():
                 files = request.files.getlist('files[]')                
                 newfiles = []
 
-                for file in files:                        
+                for file in files:                           
+           
                         if file and allowed_file(file.filename):
                                 mimetype = file.content_type
-                                filename = file.filename                                                                 
+                                filename = file.filename   
+                                filename = secure_filename(filename)                                                              
                                                               
                                 target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
                                 ctx.execute_query()
 
                                 info = FileCreationInformation()
 
-                                # fileName = "Encoding Time.csv"
-                                # with open(fileName, 'rb') as content_file:
-                                #     info.content = content = content_file.read()
-
-                                info.content = file.read()
+                                info.content = file.read()                     
 
                                 if filename == "image.jpg":
                                     filename = "img-" +  str(uuid.uuid4()) + ".jpg"                          
@@ -309,7 +322,7 @@ def upload_file():
                                 
                                 list_item = upload_file.listItemAllFields # get associated list item 
                                 list_item.set_property("Inspection_x0020_ID", inspection_id)
-                                list_item.set_property("Inspection_x0020_Date", '11/9/21')                                
+                                list_item.set_property("Inspection_x0020_Date", inspection_date)                                
                                 
                                 list_item.update()
                                 ctx.execute_query()
@@ -320,8 +333,8 @@ def upload_file():
                           
             except Exception as e:   
                 if str(e)[0:3] == "413":        
-                   return "File(s) exceed a size limit of 100K", 413
-                
+                   return "Your file exceeds a size limit of 100K", 413
+
             finally:
                pass
 
@@ -1183,6 +1196,9 @@ def printreport():
 #  Genearte Excel Report - End
 ####################################################################################
 
+###################################################################################
+#  SharePoint Section - Start
+####################################################################################
 
 
 @app.route('/api/getsharepointfiles',methods=['POST'])
@@ -1282,10 +1298,169 @@ def sharepointfiles():
         print('error')
         #return "Error", 404    
 
+#######  SharePoint Combine photos to PDF
+##  /api/createsharePointPDF
 
+@app.route('/api/createsharepointpdf',methods=['POST'])
+@check_logged
+def createsharepointpdf():       
 
+    try:        
+        content = request.get_json() #python data     
+        folder = content['folder']
+        inspection_id = content['inspection_id']
+        # inspection_id = request.headers['inspection_id']
+        # relative_url =  request.headers['relative_url']
+        inspection_date =  request.headers['inspection_date']
+       
+        # below are okay 
+        # sharePointReport = "9999 Inspection Report"
+        # relative_url = "9999InspRpt" + "/" + folder
 
+        ## below are getting from environment 
+        sharePointReport = os.environ['SHAREPOINT_REPORT']
+        relative_url = os.environ['SHAREPOINT_PATH'] + "/" + folder        
+                
+        libraryRoot = ctx.web.get_folder_by_server_relative_path(relative_url)
 
+        ctx.load(libraryRoot)
+        ctx.execute_query()
+
+        #if you want to get the files in the folder        
+        files = libraryRoot.files
+        ctx.load(files)
+        ctx.execute_query()
+
+        # for file in files:    
+        #     _name = file.properties["Name"]    
+            #print("Folder {0}, File name: {1}".format(folder, _name))
+
+        #if you want to get the items in the folder        
+        caml_query = CamlQuery()
+        caml_query.ViewXml = '''<View Scope="RecursiveAll"><Query><Where><Eq><FieldRef Name='Inspection_x0020_ID' /><Value Type='Text'>{0}</Value></Eq></Where></Query></View>'''.format(inspection_id)
+        caml_query.FolderServerRelativeUrl = relative_url
+    
+        # 3 Retrieve list items based on the CAML query 
+        #oList = ctx.web.lists.get_by_title('2022inspRpt') - title must match the list name in SharePoint
+        oList = ctx.web.lists.get_by_title(sharePointReport) 
+        items = oList.get_items(caml_query) 
+        ctx.execute_query()
+
+        sharePoint_array = []         
+        for item in items:                    
+            _id  = item.properties["Id"]                
+            list_item  = item.expand(["File"])
+            list_item = ctx.web.lists.get_by_title(sharePointReport).get_item_by_id(_id).expand(["File"])
+            ctx.load(list_item)
+            ctx.execute_query()                    
+
+            if allowed_photos(list_item.file.properties['Name']):
+                sharePoint_items = { 
+                    "filename": list_item.file.properties['Name'],
+                    "url": "https://macysinc.sharepoint.com" + list_item.file.properties["ServerRelativeUrl"],
+                    "relative_path" : list_item.file.properties["ServerRelativeUrl"],
+                    "unique_id": list_item.file.unique_id
+                }             
+                #print('id', list_item.file.unique_id)
+                sharePoint_array.append(sharePoint_items)
+
+        if (sharePoint_array == []): 
+            return "No photos for PDF generation !", 405   
+
+        #-------------------------------------------------------
+        # preparing a new PDF 
+        #-------------------------------------------------------
+        pdf = Document()
+        ttf = ImageFont.truetype("courbi.ttf", 20)    
+                            
+        for rec in sharePoint_array:
+
+            #print('SharePoint files : ', rec['relative_path'])     
+
+            page = Page()
+            pdf.append_page(page)
+            page_layout = SingleColumnLayout(page)
+
+            file_url =  rec['relative_path']
+            _response = File.open_binary(ctx, file_url)
+            data = BytesIO(_response.content) 
+            im = Image.open(data)
+
+            #-------------------------------------------------------
+            # Demonstration of Overlay but not necessary  
+            #-------------------------------------------------------
+            
+            # title_text = "Defect 1 - Trying Overlay"
+            # new_img = ImageDraw.Draw(im)
+            # new_img.text((15,15), title_text, (255, 0, 0, 10), font=ttf   )
+           
+            # processing size with 400px 
+            width = 400
+            #print ('size of original image', im.size)            
+
+            ratio = float(width)/im.size[0]
+            height = int(im.size[1]*ratio)
+            
+            #print("height={0} & width={1}".format(height, width))
+            nim = im.resize( (width, height), Image.BILINEAR )						
+            #print ('nim1=',nim.size)
+                                                
+            page_layout.add(Paragraph(rec['filename'], horizontal_alignment=Alignment.CENTERED))
+            page_layout.add(
+                BorbImage(nim, width=Decimal(400),  height=Decimal(400),  horizontal_alignment=Alignment.CENTERED )
+            )              
+
+        #-------------------------------------------------------
+        # Dumping PDF stream to file
+        #-------------------------------------------------------
+
+        out = BytesIO()							
+        PDF.dumps(out, pdf)
+        out.seek(0)
+
+        #inspection_id = '225233-1-F' 
+        #relative_url =  "2022inspRpt/SU22975MF36843"
+        
+        target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
+        ctx.execute_query()
+
+        info = FileCreationInformation()
+
+        info.content = out.read()
+
+        # Give the name of the photo albumn  
+        filename = inspection_id + " Photo Album.pdf" 
+
+        info.url = filename  
+        
+        info.overwrite = True
+        upload_file = target_folder.files.add(info)
+        ctx.execute_query()
+
+        #Once file is uploaded, it's metadata could be set like this
+            
+        list_item = upload_file.listItemAllFields # get associated list item 
+        list_item.set_property("Inspection_x0020_ID", inspection_id)
+        list_item.set_property("Inspection_x0020_Date", inspection_date)
+ 
+        list_item.update()
+        ctx.execute_query()
+
+        #Once all including metadata update is done, proceed to delete the photos.  
+        for rec in sharePoint_array:
+            #print('SharePoint files : ', rec['relative_path'])     
+            f = ctx.web.get_file_by_id(rec['unique_id'])
+            f.delete_object()
+        ctx.execute_query()
+        
+        # return  jsonify(sharePoint_array), 200         
+        return  "", 200         
+
+    except Exception as e:
+        print('error', e)
+        return "Something went wrong !", 404    
+
+#######  SharePoint delte photos from SharePoint
 @app.route('/api/deleteSPfile',methods=['POST'])
 @check_logged
 def delete_sp_file():
@@ -1307,6 +1482,12 @@ def delete_sp_file():
     except OperationFailure:
         print("error")
         return "Error", 400 
+
+
+
+###################################################################################
+#  SharePoint Section - End
+####################################################################################
 
 
 ############################################################### 
