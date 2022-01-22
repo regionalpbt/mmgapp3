@@ -1372,7 +1372,8 @@ def createsharepointpdf():
         #-------------------------------------------------------
         print("passing PDF - pass1")
         pdf = Document()
-        ttf = ImageFont.truetype("courbi.ttf", 20)    
+        #print("passing PDF - pass2")
+        #ttf = ImageFont.truetype("courbi.ttf", 20)    
         print("passing PDF - pass2")
                             
         for rec in sharePoint_array:
