@@ -1370,8 +1370,10 @@ def createsharepointpdf():
         #-------------------------------------------------------
         # preparing a new PDF 
         #-------------------------------------------------------
+        print("passing PDF - pass1")
         pdf = Document()
         ttf = ImageFont.truetype("courbi.ttf", 20)    
+        print("passing PDF - pass2")
                             
         for rec in sharePoint_array:
 
@@ -1414,6 +1416,7 @@ def createsharepointpdf():
         # Dumping PDF stream to file
         #-------------------------------------------------------
 
+        print("passing PDF - pass3")
         out = BytesIO()							
         PDF.dumps(out, pdf)
         out.seek(0)
