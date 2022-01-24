@@ -105,7 +105,8 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes = int(os.environ['S
 Session(app)
 
 app.config['UPLOAD_FOLDER'] = '.'
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024    # 100K       
+#app.config['MAX_CONTENT_LENGTH'] = 100 * 1024    # 100K       
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ['UPLOAD_MAX_SIZE'])   
 
 # This section is needed for url_for("foo", _external=True) to automatically
 # generate http scheme when this sample is running on localhost,
