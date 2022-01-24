@@ -74,6 +74,9 @@ from borb.pdf.pdf import PDF
 from io import BytesIO
 from PIL import Image, ImageFont, ImageDraw
 
+# for zipping files
+from zipfile import ZipFile
+
 app = Flask(__name__, static_folder="frontend/build/static", template_folder="frontend/build")    #production 
     
 app.config['SECRET_KEY']= os.environ['SECRET_KEY']
@@ -334,7 +337,7 @@ def upload_file():
                           
             except Exception as e:   
                 if str(e)[0:3] == "413":        
-                   return "Your file exceeds a size limit of 100K", 413
+                   return f"The size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413
 
             finally:
                pass
@@ -1369,14 +1372,87 @@ def createsharepointpdf():
             return "No photos for PDF generation !", 405   
 
         #-------------------------------------------------------
+        # Preparing zip file
+        #-------------------------------------------------------
+        
+        archive = BytesIO()
+        with ZipFile(archive, 'w') as zip_archive:
+
+            for rec in sharePoint_array:
+                     
+                file_url =  rec['relative_path']
+                _response = File.open_binary(ctx, file_url)
+                data = BytesIO(_response.content) 
+                im = Image.open(data)
+
+                # processing size with 400px 
+                width = 400
+                #print ('size of original image', im.size)            
+
+                ratio = float(width)/im.size[0]
+                height = int(im.size[1]*ratio)
+            
+                #print("height={0} & width={1}".format(height, width))
+                nim = im.resize( (width, height), Image.BILINEAR )						
+                #print ('nim1=',nim.siz# e)
+
+                with zip_archive.open(rec['filename'], 'w') as _file:                    
+                    _packet = BytesIO()
+                    print(f"processing rec['filename'] with extension {rec['filename'].rsplit('.', 1)[1].upper()}")
+
+                    ext = rec['filename'].rsplit('.', 1)[1].upper()                     
+                    if ext == 'JPG':
+                        ext = 'JPEG'
+                    nim.save(_packet, format=ext)
+                    _file.write(_packet.getvalue())        
+                _file.close
+
+        #-------------------------------------------------------
+        # Dumping PDF stream to file
+        #-------------------------------------------------------
+       
+        out = BytesIO()            
+        out.write(archive.getbuffer())                       
+        out.seek(0)    
+        archive.close()
+
+        #print("passing PDF")
+        target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
+        ctx.execute_query()
+
+        info = FileCreationInformation()
+
+        info.content = out.read()
+
+        # Give the name of the photo albumn  
+        filename = inspection_id + " Photo Album.zip" 
+
+        info.url = filename  
+        
+        info.overwrite = True
+        upload_file = target_folder.files.add(info)
+        ctx.execute_query()
+
+        #Once file is uploaded, it's metadata could be set like this
+            
+        list_item = upload_file.listItemAllFields # get associated list item 
+        list_item.set_property("Inspection_x0020_ID", inspection_id)
+        list_item.set_property("Inspection_x0020_Date", inspection_date)
+ 
+        list_item.update()
+        ctx.execute_query()
+        
+        #-------------------------------------------------------
+        # Ending zip file
+        #-------------------------------------------------------
+        
+        #-------------------------------------------------------
         # preparing a new PDF 
         #-------------------------------------------------------
-        print("passing PDF - pass1")
+        
         pdf = Document()
-        #print("passing PDF - pass2")
         #ttf = ImageFont.truetype("courbi.ttf", 20)    
-        print("passing PDF - pass2")
-                            
+                                    
         for rec in sharePoint_array:
 
             #print('SharePoint files : ', rec['relative_path'])     
@@ -1418,7 +1494,7 @@ def createsharepointpdf():
         # Dumping PDF stream to file
         #-------------------------------------------------------
 
-        print("passing PDF - pass3")
+        #print("passing PDF")
         out = BytesIO()							
         PDF.dumps(out, pdf)
         out.seek(0)
