@@ -338,7 +338,7 @@ def upload_file():
                 return jsonify(newfiles),200
                           
             except Exception as e:   
-                print (e)
+                print (f'QA App error : {e}')
                 if str(e)[0:3] == "413":        
                    return f"The size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413
 
