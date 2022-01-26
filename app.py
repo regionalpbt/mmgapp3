@@ -272,6 +272,7 @@ def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 ALLOWED_PHOTOS = set(['png', 'jpg', 'jpeg'])
+IMAGE_FORMAT = ['PNG', 'JPEG', 'JPEG']
 
 def allowed_photos(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PHOTOS
@@ -326,7 +327,8 @@ def upload_file():
                                 
                                 list_item = upload_file.listItemAllFields # get associated list item 
                                 list_item.set_property("Inspection_x0020_ID", inspection_id)
-                                list_item.set_property("Inspection_x0020_Date", inspection_date)                                
+                                list_item.set_property("Inspection_x0020_Date", inspection_date)                              
+                                list_item.set_property("Last_x0020_Editor", session["userName"])
                                 
                                 list_item.update()
                                 ctx.execute_query()
@@ -639,7 +641,9 @@ def establishSessionData():
     
     #this forces the mf_list to be generated from profile only, not API requests.   
     
+    session["userName"] = f"{results['first_name']} {results['last_name']}"
     session["mfList"] = results["mf_list"]
+
         
     sessionData["userProfile"] = {"email" : results["email"], "first_name" : results["first_name"], "ignore_submit": results["ignore_submit"],
     "environment":  os.environ["ENVIRONMENT"] }    
@@ -1253,6 +1257,7 @@ def sharepointfiles():
             _modified = item.properties["Modified"]
             _author = item.properties["AuthorId"]
             _modified_by = item.properties["EditorId"]    
+            _last_editor = item.properties["Last_x0020_Editor"]                    
             _id  = item.properties["Id"]                
             list_item  = item.expand(["File"])
             list_item = ctx.web.lists.get_by_title(sharePointReport).get_item_by_id(_id).expand(["File"])
@@ -1276,7 +1281,8 @@ def sharepointfiles():
                 "size": _size,
                 "url": "https://macysinc.sharepoint.com" + list_item.file.properties["ServerRelativeUrl"],
                  "relative_path" : list_item.file.properties["ServerRelativeUrl"],
-                 "unique_id": list_item.file.unique_id
+                 "unique_id": list_item.file.unique_id,
+                 "last_editor": _last_editor
             }             
             #print('id', list_item.file.unique_id)
             sharePoint_array.append(sharePoint_items)
@@ -1292,7 +1298,8 @@ def sharepointfiles():
                 "size": None,
                 "url" :None,
                 "relative_path" : None,
-                "unique_id": None
+                "unique_id": None,
+                "last_editor": None 
             } 
             sharePoint_array.append(sharePoint_items)
        
@@ -1398,12 +1405,18 @@ def createsharepointpdf():
 
                 with zip_archive.open(rec['filename'], 'w') as _file:                    
                     _packet = BytesIO()
-                    print(f"processing rec['filename'] with extension {rec['filename'].rsplit('.', 1)[1].upper()}")
+                    print(f"processing {rec['filename']} with extension {rec['filename'].rsplit('.', 1)[1].upper()}")
 
-                    ext = rec['filename'].rsplit('.', 1)[1].upper()                     
-                    if ext == 'JPG':
-                        ext = 'JPEG'
-                    nim.save(_packet, format=ext)
+                    ## find corresponding FORMAT that PIL IMAGE defines
+                    ext = rec['filename'].rsplit('.', 1)[1].upper()       
+                    imageFormat = ''
+                    count = 0                    
+                    for x in ALLOWED_PHOTOS:	
+                        if x.upper()==ext:                            
+                            imageFormat = IMAGE_FORMAT[count]                                           
+                            break
+                    count +=1                    
+                    nim.save(_packet, format=imageFormat)
                     _file.write(_packet.getvalue())        
                 _file.close
 
@@ -1438,6 +1451,7 @@ def createsharepointpdf():
         list_item = upload_file.listItemAllFields # get associated list item 
         list_item.set_property("Inspection_x0020_ID", inspection_id)
         list_item.set_property("Inspection_x0020_Date", inspection_date)
+        list_item.set_property("Last_x0020_Editor", session["userName"])
  
         list_item.update()
         ctx.execute_query()
@@ -1523,6 +1537,7 @@ def createsharepointpdf():
         list_item = upload_file.listItemAllFields # get associated list item 
         list_item.set_property("Inspection_x0020_ID", inspection_id)
         list_item.set_property("Inspection_x0020_Date", inspection_date)
+        list_item.set_property("Last_x0020_Editor", session["userName"])
  
         list_item.update()
         ctx.execute_query()
