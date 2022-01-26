@@ -339,14 +339,13 @@ def upload_file():
                           
             except Exception as e:   
                 print (f'QA App error : {e}')
-                if str(e)[0:3] == "413":        
-                   return f"The size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413
+                return f"The size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413
 
             finally:
                pass
 
         else:
-                return "Upload Error", 406
+               return "Upload Error", 406
 
 @app.route('/download/<string:_id>', methods=['GET'])
 @check_logged
