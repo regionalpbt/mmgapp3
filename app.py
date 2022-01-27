@@ -399,11 +399,12 @@ def getDefectTable():
     try:
         print("Calling Defect Table")    
         col = db["defectTable"]
-        query = {  "_id" : { "$gt" :0 }}       
+        query = {  "id" : { "$gt" :0 }}       
         defect_array = []     
         results = col.find(query)
         for result in results:
-            defect_array.append(result)
+            defect_array.append(result) 
+ 
         return  jsonify(defect_array)
     
     except OperationFailure:
