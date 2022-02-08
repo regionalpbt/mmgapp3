@@ -40,6 +40,7 @@ from datetime import datetime, timezone
 import itertools
 from itertools import groupby
 from openpyxl.utils.cell import coordinate_from_string, column_index_from_string, get_column_letter
+from openpyxl.cell import MergedCell
 
 
 # Below for SahrePoint
@@ -801,6 +802,7 @@ def groupsum(psDict, psDictKey, psGroupKey, psSumKey):
     return resultLst
 
 # Generate report in Excel format
+# version 18
 # psWS = Excel worksheet
 # psRptDict = Report Content Dictionary
 # psRptFormat = Report Format Dictiionary
@@ -819,17 +821,33 @@ def genReport(psWS, psRptDict, psRptFormat):
                     for lstKey2, lstValue2 in lstValue.items(): 
                         if len(lstValue2) > 0:
                             i = 0
+                            j = 0
                             while i < len(lstValue2):
                                 if lstKey2 in psRptFormat["cell"][lstKey]:
                                     if "nextRecord" in psRptFormat["cell"][lstKey]:
                                         if psRptFormat["cell"][lstKey]["nextRecord"] == "Column":
-                                            colId = column_index_from_string(coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[0]) + i
-                                            rowId = coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[1]
+                                            mcell = True
+                                            while mcell == True:
+                                                colId = column_index_from_string(coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[0]) + j
+                                                rowId = coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[1]
+                                                if not isinstance(psWS.cell(row=rowId, column=colId), MergedCell):
+                                                    mcell = False
+                                                else:
+                                                    mcell = True
+                                                    j += 1                                                 
                                         else:
-                                            colId = column_index_from_string(coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[0])
-                                            rowId = coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[1] + i
+                                            mcell = True
+                                            while mcell == True:
+                                                colId = column_index_from_string(coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[0])
+                                                rowId = coordinate_from_string(psRptFormat["cell"][lstKey][lstKey2])[1] + i
+                                                if not isinstance(psWS.cell(row=rowId, column=colId), MergedCell):
+                                                    mcell = False
+                                                else:
+                                                    mcell = True
+                                                    j += 1
                                         psWS.cell(row=rowId, column=colId, value=lstValue2[i])
                                 i += 1
+                                j += 1 
             else:
                 if lstKey == "rightHeader":
                     psWS.HeaderFooter.oddHeader.right.text = lstValue
@@ -876,6 +894,7 @@ def genReport(psWS, psRptDict, psRptFormat):
                     1 == 1
         
         except:
+            print ("Error found")
             return "Error", 701
     return "OK", 0    
  
