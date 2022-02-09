@@ -1005,23 +1005,20 @@ def printreport():
         inspID = inspMcno + "-" + inspIter + "-" + inspTypeInitial
 
         #Prepare figures for Order No, Order Qty and Ship Qty
-        shipQtyLst = groupsum(inspRecord, "items", "po_no", "ship_qty")
         orderQtyLst = groupsum(inspRecord, "items", "po_no", "order_qty")
-        qtyDict = {"poNo": [], "orderQty": [], "shipQty": []}
-        qtyDict2 = {"poNo": [], "orderQty": [], "shipQty": []}
+        shipQtyTot = groupsum(inspRecord, "itemsTotal", "", "ship_qty")[0]
+        qtyDict = {"poNo": [], "orderQty": []}
+        qtyDict2 = {"poNo": [], "orderQty": []}
         i = 0
         for orderQtyItem in orderQtyLst:
             i += 1
-            for shipQtyItem in shipQtyLst:
-                if orderQtyItem[0] == shipQtyItem[0]:
-                    if i <= 10:
-                            qtyDict["poNo"].append(shipQtyItem[0])
-                            qtyDict["orderQty"].append(orderQtyItem[1])
-                            qtyDict["shipQty"].append(shipQtyItem[1])
-                    else:
-                            qtyDict2["poNo"].append(shipQtyItem[0])
-                            qtyDict2["orderQty"].append(orderQtyItem[1])
-                            qtyDict2["shipQty"].append(shipQtyItem[1])                
+            if i <= 10:
+                qtyDict["poNo"].append(orderQtyItem[0])
+                qtyDict["orderQty"].append(orderQtyItem[1])
+                        
+            else:
+                qtyDict2["poNo"].append(orderQtyItem[0])
+                qtyDict2["orderQty"].append(orderQtyItem[1])
 
         # Preapre figures for Critical, Major, Minor, Total Defect, Accept Level, Reject Level and Visual Result
         criticalDefect = ""
@@ -1136,52 +1133,52 @@ def printreport():
 
         # dictionary for the output.  key in this dictionary must match the key the collection: excelMapping
         report = {
-        "suNo" : inspRecord["main"].get("su_no", " "),
-        "mfNo" : inspRecord["main"].get("mf_no", " "),
-        "suName": colnameParty.find_one ( { "_id" : inspRecord["main"].get("su_no", " ") } )["party_name"], 
-        "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
-        "inspRecordNo": inspID,
-        "brand" : (",".join(unique(inspRecord, "items", "label"))),
-        "inspType" : inspType,
-        "inspDate": inspDate,
-        "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
-        "style" : (",".join(unique(inspRecord, "items", "item_no"))),
-        "prodType" : inspRecord["misc"].get("product_type", " "),
-        "fibreContent" : inspRecord["misc"].get("fibre_content", " " ),
-        "shipMode" : inspRecord["misc"].get("ship_mode", " "),
-        "labTestReport" : inspRecord["misc"].get("lab_test_report", " "),
-        "childSafetyReport" : inspRecord["misc"].get("lab_child_safety_report", " "),
-        "prop65Report" : inspRecord["misc"].get("props65_report", " "),
-        "packPct" : inspRecord["misc"].get("pack_pct", " "),
-        "shipWindow" : inspRecord["misc"].get("ship_window"," "),
-        "inspector" : inspRecord["misc"].get("inspector", " "),
-        "qtyDict": qtyDict,
-        "qtyDict2" : qtyDict2,
-        "sampleSize": groupsum(inspRecord, "itemsTotal", "", "sample_qty")[0],
-        "acceptLevel": acceptLevel,
-        "rejectLevel": rejectLevel,
-        "criticalDefect": criticalDefect,
-        "majorDefect": majorDefect,
-        "minorDefect": minorDefect,
-        "totalDefect": totalDefect,
-        "visualResult": visualResult,
-        "packingResult": inspRecord["misc"].get("packing_result", ""),
-        "measureResult": inspRecord["misc"].get("measurement_result", ""),
-        "finalResult": inspRecord["misc"].get("final_result", ""),
-        "chkDict1": chkDict1,
-        "chkDict2": chkDict2,
-        "chkDict3": chkDict3,
-        "chkDict4": chkDict4,
-        "chkDict5": chkDict5,
-        "defectDict": defectDict,
-        "comments": inspRecord["misc"].get("comments", ""),
-        "cartonList": inspRecord["misc"].get("carton_list", ""),
-        "cartonTotal": inspRecord["misc"].get("carton_total", ""),
-        "rightHeader": InspBy,
-        "leftFooter": footer,
-        "expandRow" : [["C24", 23, 26], ["B57", 57, 68]],
-        "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
-
+            "suNo" : inspRecord["main"].get("su_no", " "),
+            "mfNo" : inspRecord["main"].get("mf_no", " "),
+            "suName": colnameParty.find_one ( { "_id" : inspRecord["main"].get("su_no", " ") } )["party_name"], 
+            "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
+            "inspRecordNo": inspID,
+            "brand" : (",".join(unique(inspRecord, "items", "label"))),
+            "inspType" : inspType,
+            "inspDate": inspDate,
+            "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
+            "style" : (",".join(unique(inspRecord, "items", "item_no"))),
+            "prodType" : inspRecord["misc"].get("product_type", " "),
+            "fibreContent" : inspRecord["misc"].get("fibre_content", " " ),
+            "shipMode" : inspRecord["misc"].get("ship_mode", " "),
+            "labTestReport" : inspRecord["misc"].get("lab_test_report", " "),
+            "childSafetyReport" : inspRecord["misc"].get("lab_child_safety_report", " "),
+            "prop65Report" : inspRecord["misc"].get("props65_report", " "),
+            "packPct" : inspRecord["misc"].get("pack_pct", " "),
+            "shipWindow" : inspRecord["misc"].get("ship_window"," "),
+            "inspector" : inspRecord["misc"].get("inspector", " "),
+            "qtyDict": qtyDict,
+            "qtyDict2" : qtyDict2,
+            "shipQty" : shipQtyTot,
+            "sampleSize": groupsum(inspRecord, "itemsTotal", "", "sample_qty")[0],
+            "acceptLevel": acceptLevel,
+            "rejectLevel": rejectLevel,
+            "criticalDefect": criticalDefect,
+            "majorDefect": majorDefect,
+            "minorDefect": minorDefect,
+            "totalDefect": totalDefect,
+            "visualResult": visualResult,
+            "packingResult": inspRecord["misc"].get("packing_result", ""),
+            "measureResult": inspRecord["misc"].get("measurement_result", ""),
+            "finalResult": inspRecord["misc"].get("final_result", ""),
+            "chkDict1": chkDict1,
+            "chkDict2": chkDict2,
+            "chkDict3": chkDict3,
+            "chkDict4": chkDict4,
+            "chkDict5": chkDict5,
+            "defectDict": defectDict,
+            "comments": inspRecord["misc"].get("comments", ""),
+            "cartonList": inspRecord["misc"].get("carton_list", ""),
+            "cartonTotal": inspRecord["misc"].get("carton_total", ""),
+            "rightHeader": InspBy,
+            "leftFooter": footer,
+            "expandRow" : [["C24", 23, 25], ["B57", 57, 68]],
+            "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
         }
 
         result = genReport(ws, report, rpt)
