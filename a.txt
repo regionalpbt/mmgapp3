@@ -1,0 +1,12 @@
+        <div className="defectOption_defectArea">
+          <select onChange={handleSelectChangeDefect} id="defectOptionsDefectArea" className="clickable" value={currentDefectAreaCode + "-" + currentDefectArea}>
+            <option value="Select">Select</option>
+            {optionListDefect
+              .filter(y => y.product === currentProduct && y.lang === defectLanguage)
+              .map(x => (
+                <option key={x.id} value={x.defect_code + "-" + x.defect_area} disabled={editMode ? "" : "disabled"}>
+                  {x.defect_code + "-" + x.defect_area}
+                </option>
+              ))}
+          </select>
+        </div>

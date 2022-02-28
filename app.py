@@ -627,6 +627,8 @@ def getUserProfile():
 def establishSessionData():
 
     sessionData={}     
+
+    email =""
    
     if (os.environ['ENVIRONMENT']=="PROD"):
         email = session['email']        
@@ -742,7 +744,36 @@ def establishSessionData():
     session["siteUsers"] = siteUsers     
     sessionData["sharePointPath"] = os.environ['SHAREPOINT_PATH']
     session["sharePointReport"] = os.environ['SHAREPOINT_REPORT']
-    
+
+    #get QA members list     
+
+    col = db["metaTable"]
+    query = {'category': "qaList"}
+    results = col.find_one(query)
+ 
+    group = []
+    for rec in results['selectionList']:          
+        lead_email = rec["QALead"]
+        for qa_email in rec['QAList']:            
+            if qa_email["mqa"] == email:                
+                group = rec['QAList']   
+
+    sessionData["mqaMembers"] = group   
+
+    #get Pack Type  
+    col = db["metaTable"]
+    query = {'category': "packType"}
+    results = col.find_one(query)
+    packTypes = results['selectionList']     
+    sessionData["packTypes"] = packTypes     
+
+
+    #get Product Category list     
+    col = db["metaTable"]
+    query = {'category': "productCategory"}
+    results = col.find_one(query)
+    productCategories = results['selectionList']     
+    sessionData["productCategories"] = productCategories
     
     return sessionData
 
