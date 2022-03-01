@@ -597,7 +597,7 @@ def searchInspMC():
     ##results = col.find(query).limit(5)    
     ## returns 10 at a time
     ##  to access print(rec["_id"]["mc"])    
-    results = col.find(query).limit(10)     
+    results = col.find(query).limit(60)     
 
     id_array = []
     for result in results:
