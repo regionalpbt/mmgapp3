@@ -945,7 +945,10 @@ def printreport():
 
     
     content = json.loads(request.headers['inspectionID'])
-    inspectionID = content["inspectionID"]      
+    inspectionID = content["inspectionID"]   
+    
+    localPrintTime = json.loads(request.headers['localTime'])
+ 
 
     inspMcno = inspectionID["mc"]
     inspIter = inspectionID["iteration"]
@@ -1160,8 +1163,8 @@ def printreport():
             inspDate = "-"
 
         #Set Footname as Inspection ID + Print Date
-        footer = "Inspection ID: " + inspID + " \n " + "Print Date: " + datetime.now().strftime('%m/%d/%YYYY %H:%M:%S')
-
+        #footer = "Inspection ID: " + inspID + " \n " + "Print Date: " + datetime.now().strftime('%m/%d/%YYYY %H:%M:%S')
+        footer = "Inspection ID: " + inspID + " \n " + "Print Date: " + localPrintTime
         # dictionary for the output.  key in this dictionary must match the key the collection: excelMapping
         report = {
             "suNo" : inspRecord["main"].get("su_no", " "),
