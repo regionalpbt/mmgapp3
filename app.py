@@ -969,8 +969,7 @@ def printreport():
 
         db = cluster["qcDB"]
         colname = db["inspectionResult"]       
-        colnameParty = db["partyTable"]
-        colnameChkLst = db["checkList"]
+        colnameParty = db["partyTable"]        
         colnameExcelMap = db["fileDirectory"]
         colnameDefLst = db["defectTable"]
         # new added colnameUser below on 3/2/2022:
