@@ -931,7 +931,7 @@ def genReport(psWS, psRptDict, psRptFormat):
  
 
 
-#Version 20
+#Version 22
 @app.route('/printreport',methods=['POST'])
 @check_logged
 def printreport():     
@@ -968,11 +968,13 @@ def printreport():
     try:
 
         db = cluster["qcDB"]
-        colname = db["inspectionResult"]
+        colname = db["inspectionResult"]       
         colnameParty = db["partyTable"]
         colnameChkLst = db["checkList"]
         colnameExcelMap = db["fileDirectory"]
         colnameDefLst = db["defectTable"]
+        # new added colnameUser below on 3/2/2022:
+        colnameUser = db["userProfile"]
 
         # inspMcno = "225461"
         # inspIter = "1"
@@ -988,19 +990,32 @@ def printreport():
 
         # Determine MQA or SQA Report
         # If inspection record has been submitted, offical report will be use, else will use draft report
+        # 3/2/2022 : Also to determine the Inspector Name based on email 
         if (inspRecord["misc"].get("qa_type", "").lower() == "mqa") and (inspRecord["misc"].get("submitted", False) == True):
             rpt = colnameExcelMap.find_one ( { "_id.excelFile": "InspRpt-MQA"} )
             InspBy = "MMGQA"
+            inspEmail = inspRecord["misc"].get("mqa", False)
         elif (inspRecord["misc"].get("qa_type", "").lower() == "mqa") and (inspRecord["misc"].get("submitted", False) == False):
             rpt = colnameExcelMap.find_one ( { "_id.excelFile": "InspRpt-Draft-MQA"} )
             InspBy = "MMGQA"
+            inspEmail = inspRecord["misc"].get("mqa", False)
         elif (inspRecord["misc"].get("qa_type", "").lower() == "sqa") and (inspRecord["misc"].get("submitted", False) == True):
             rpt = colnameExcelMap.find_one ( { "_id.excelFile": "InspRpt-SQA"} )
             InspBy = "SQA"
+            inspEmail = inspRecord["misc"].get("sqa", False)
         else:
             rpt = colnameExcelMap.find_one ( { "_id.excelFile": "InspRpt-Draft-SQA"} )
             InspBy = "SQA"
+            inspEmail = inspRecord["misc"].get("sqa", False)
 
+        if inspEmail != False:
+            userList = colnameUser.find_one( { "email" : inspEmail })
+            if userList != None:
+                inspName = userList["first_name"] + " " + userList["last_name"]
+            else:
+                inspName = ""
+        else:
+            inspName = ""
 
 
         #filename when using in Heroku:
@@ -1168,56 +1183,55 @@ def printreport():
         # dictionary for the output.  key in this dictionary must match the key the collection: excelMapping
         #         
         report = {
-        "suNo" : inspRecord["main"].get("su_no", " "),
-        "mfNo" : inspRecord["main"].get("mf_no", " "),
-        "suName": colnameParty.find_one ( { "_id" : inspRecord["main"].get("su_no", " ") } )["party_name"], 
-        "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
-        "inspRecordNo": inspID,
-        "brand" : (",".join(unique(inspRecord, "items", "label"))),
-        "inspType" : inspType,
-        "inspDate": inspDate,
-        "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
-        "style" : (",".join(unique(inspRecord, "items", "item_no"))),
-        "prodType" : inspRecord["misc"].get("product_type", " "),
-        "packType" : inspRecord["misc"].get("pack_type", " "),
-        "fibreContent" : inspRecord["misc"].get("fibre_content", " " ),
-        "shipMode" : inspRecord["misc"].get("ship_mode", " "),
-        "labTestReport" : inspRecord["misc"].get("lab_test_report", " "),
-        "childSafetyReport" : inspRecord["misc"].get("lab_child_safety_report", " "),
-        "prop65Report" : inspRecord["misc"].get("props65_report", " "),
-        "packPct" : inspRecord["misc"].get("pack_pct", " "),
-        "shipWindow" : inspRecord["misc"].get("ship_window"," "),
-        "inspector" : inspRecord["misc"].get("inspector", " "),
-        "qtyDict": qtyDict,
-        "qtyDict2" : qtyDict2,
-        "shipQty" : shipQtyTot,
-        "sampleSize": groupsum(inspRecord, "itemsTotal", "", "sample_qty")[0],
-        "acceptLevel": acceptLevel,
-        "rejectLevel": rejectLevel,
-        "criticalDefect": criticalDefect,
-        "majorDefect": majorDefect,
-        "minorDefect": minorDefect,
-        "totalDefect": totalDefect,
-        "visualResult": visualResult,
-        "packingResult": inspRecord["misc"].get("packing_result", ""),
-        "measureResult": inspRecord["misc"].get("measurement_result", ""),
-        "finalResult": inspRecord["misc"].get("final_result", ""),
-        "chkDict1": chkDict1,
-        "chkDict2": chkDict2,
-        "chkDict3": chkDict3,
-        "chkDict4": chkDict4,
-        "chkDict5": chkDict5,
-        "defectDict": defectDict,
-        "comments": inspRecord["misc"].get("comments", ""),
-        "cartonList": inspRecord["misc"].get("carton_list", ""),
-        "cartonTotal": inspRecord["misc"].get("carton_total", ""),
-        "rightHeader": InspBy,
-        "leftFooter": footer,
-        "expandRow" : [["C24", 23, 25], ["B57", 57, 68]],
-        "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
+            "suNo" : inspRecord["main"].get("su_no", " "),
+            "mfNo" : inspRecord["main"].get("mf_no", " "),
+            "suName": colnameParty.find_one ( { "_id" : inspRecord["main"].get("su_no", " ") } )["party_name"], 
+            "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
+            "inspRecordNo": inspID,
+            "brand" : (",".join(unique(inspRecord, "items", "label"))),
+            "inspType" : inspType,
+            "inspDate": inspDate,
+            "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
+            "style" : (",".join(unique(inspRecord, "items", "item_no"))),
+            "prodType" : inspRecord["misc"].get("product_type", " "),
+            "packType" : inspRecord["misc"].get("pack_type", " "),
+            "fibreContent" : inspRecord["misc"].get("fibre_content", " " ),
+            "shipMode" : inspRecord["misc"].get("ship_mode", " "),
+            "labTestReport" : inspRecord["misc"].get("lab_test_report", " "),
+            "childSafetyReport" : inspRecord["misc"].get("lab_child_safety_report", " "),
+            "prop65Report" : inspRecord["misc"].get("props65_report", " "),
+            "packPct" : inspRecord["misc"].get("pack_pct", " "),
+            "shipWindow" : inspRecord["misc"].get("ship_window"," "),
+            "inspector" : inspName,
+            "qtyDict": qtyDict,
+            "qtyDict2" : qtyDict2,
+            "shipQty" : shipQtyTot,
+            "sampleSize": groupsum(inspRecord, "itemsTotal", "", "sample_qty")[0],
+            "acceptLevel": acceptLevel,
+            "rejectLevel": rejectLevel,
+            "criticalDefect": criticalDefect,
+            "majorDefect": majorDefect,
+            "minorDefect": minorDefect,
+            "totalDefect": totalDefect,
+            "visualResult": visualResult,
+            "packingResult": inspRecord["misc"].get("packing_result", ""),
+            "measureResult": inspRecord["misc"].get("measurement_result", ""),
+            "finalResult": inspRecord["misc"].get("final_result", ""),
+            "chkDict1": chkDict1,
+            "chkDict2": chkDict2,
+            "chkDict3": chkDict3,
+            "chkDict4": chkDict4,
+            "chkDict5": chkDict5,
+            "defectDict": defectDict,
+            "comments": inspRecord["misc"].get("comments", ""),
+            "cartonList": inspRecord["misc"].get("carton_list", ""),
+            "cartonTotal": inspRecord["misc"].get("carton_total", ""),
+            "rightHeader": InspBy,
+            "leftFooter": footer,
+            "expandRow" : [["C24", 23, 25], ["B57", 57, 68]],
+            "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
 
         }
-
         result = genReport(ws, report, rpt)
 
         #Output in Heroku:        
