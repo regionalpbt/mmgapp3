@@ -774,7 +774,14 @@ def establishSessionData():
     results = col.find_one(query)
     productCategories = results['selectionList']     
     sessionData["productCategories"] = productCategories
-    
+
+
+    #get Inspection Type 
+    col = db["metaTable"]
+    query = {'category': "inspType"}
+    results = col.find_one(query)    
+    sessionData["inspType"] = results['selectionList']     
+        
     return sessionData
 
 ####################################################################################
