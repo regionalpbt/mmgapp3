@@ -938,7 +938,7 @@ def genReport(psWS, psRptDict, psRptFormat):
  
 
 
-#Version 22
+#Version 23  3/3/22
 @app.route('/printreport',methods=['POST'])
 @check_logged
 def printreport():     
@@ -1033,31 +1033,7 @@ def printreport():
 
         ws = wb[rpt["file"]["wsName"]]
 
-        # Determine the Inspection Type for preparing the inspection ID
-        if inspType.lower() == "1st in-line":
-            inspTypeInitial = "1"
-        elif inspType.lower() == "2nd in-line":
-            inspTypeInitial = "2"
-        elif inspType.lower() == "3rd in-line":
-            inspTypeInitial = "3"
-        elif inspType.lower() == "4th in-line":
-            inspTypeInitial = "4"
-        elif inspType.lower() == "5th in-line":
-            inspTypeInitial = "5"
-        elif inspType.lower() == "1st pre-final":
-            inspTypeInitial = "1P"
-        elif inspType.lower() == "2nd pre-final":
-            inspTypeInitial = "2P"
-        elif inspType.lower() == "pre-production meeting":
-            inspTypeInitial = "PP"
-        elif inspType.lower() == "final":
-            inspTypeInitial = "F"
-        elif inspType.lower() == "re-inspection for failure":
-            inspTypeInitial = "FR"
-        else:
-            inspTypeInitial = "XX"
-
-        inspID = inspMcno + "-" + inspIter + "-" + inspTypeInitial
+        inspID = inspMcno + "-" + inspIter + "-" + inspType
 
         #Prepare figures for Order No, Order Qty and Ship Qty
         orderQtyLst = groupsum(inspRecord, "items", "po_no", "order_qty")
