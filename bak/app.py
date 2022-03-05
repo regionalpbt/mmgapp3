@@ -277,19 +277,8 @@ IMAGE_FORMAT = ['PNG', 'JPEG', 'JPEG']
 
 def allowed_photos(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_PHOTOS
+	
 
-def image_format(filename):    
-    ## find corresponding FORMAT that PIL IMAGE defines
-    ext = filename.rsplit('.', 1)[1].upper()       
-    imageFormat = ''
-    count = 0                    
-    for x in ALLOWED_PHOTOS:	
-        if x.upper()==ext:                            
-            imageFormat = IMAGE_FORMAT[count]                                           
-            break
-    count +=1     
-    return imageFormat     
-    
 @app.route('/api/upload', methods=['POST'])
 @check_logged
 def upload_file():
@@ -1002,8 +991,8 @@ def printreport():
         query =    { 'category' : { '$eq': "inspType" } }
         results = colnameMeta.find_one(query)
         typeArray  = results['selectionList']       
-        inspTypeArray = filter(lambda x: x['insp_type'] == inspType, typeArray)
-        inspTypeLong = list(inspTypeArray)[0]['insp_type_long']
+        inspTypeArray = filter(lambda x: x['initial'] == inspType, typeArray)
+        inspType_long = list(inspTypeArray)[0]['type']
        
 
         inspRecord = colname.find_one( { "_id.mc" : inspMcno,
@@ -1191,7 +1180,7 @@ def printreport():
             "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
             "inspRecordNo": inspID,
             "brand" : (",".join(unique(inspRecord, "items", "label"))),
-            "inspType" : inspTypeLong,
+            "inspType" : inspType_long,
             "inspDate": inspDate,
             "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
             "style" : (",".join(unique(inspRecord, "items", "item_no"))),
@@ -1452,7 +1441,6 @@ def createsharepointpdf():
         # Preparing zip file
         #-------------------------------------------------------
         
-        
         archive = BytesIO()
         with ZipFile(archive, 'w') as zip_archive:
 
@@ -1461,14 +1449,33 @@ def createsharepointpdf():
                 file_url =  rec['relative_path']
                 _response = File.open_binary(ctx, file_url)
                 data = BytesIO(_response.content) 
-                
-                im = Image.open(data)            
-                
+                im = Image.open(data)
+
+                # processing size with 400px 
+                width = 400
+                #print ('size of original image', im.size)            
+
+                ratio = float(width)/im.size[0]
+                height = int(im.size[1]*ratio)
+            
+                #print("height={0} & width={1}".format(height, width))
+                nim = im.resize( (width, height), Image.BILINEAR )						
+                #print ('nim1=',nim.siz# e)
+
                 with zip_archive.open(rec['filename'], 'w') as _file:                    
                     _packet = BytesIO()
                     print(f"processing {rec['filename']} with extension {rec['filename'].rsplit('.', 1)[1].upper()}")
-                    imageFormat = image_format(rec['filename'])                     
-                    im.save(_packet, format=imageFormat, dpi=(300, 300), size=(400, 400))
+
+                    ## find corresponding FORMAT that PIL IMAGE defines
+                    ext = rec['filename'].rsplit('.', 1)[1].upper()       
+                    imageFormat = ''
+                    count = 0                    
+                    for x in ALLOWED_PHOTOS:	
+                        if x.upper()==ext:                            
+                            imageFormat = IMAGE_FORMAT[count]                                           
+                            break
+                    count +=1                    
+                    nim.save(_packet, format=imageFormat)
                     _file.write(_packet.getvalue())        
                 _file.close
 
@@ -1530,13 +1537,26 @@ def createsharepointpdf():
             file_url =  rec['relative_path']
             _response = File.open_binary(ctx, file_url)
             data = BytesIO(_response.content) 
+            im = Image.open(data)
 
-            # convert to 300 dpi and 400 pixels
-            im2 = Image.open(data) 
-            data2 = BytesIO()    
-            im2.save(data2, dpi=(300, 300),format=image_format(rec['filename']), size=(400, 400)) 
-            nim = Image.open(data2)                                    
-        
+            #-------------------------------------------------------
+            # Demonstration of Overlay but not necessary  
+            #-------------------------------------------------------
+            
+            # title_text = "Defect 1 - Trying Overlay"
+            # new_img = ImageDraw.Draw(im)
+            # new_img.text((15,15), title_text, (255, 0, 0, 10), font=ttf   )
+           
+            # processing size with 400px 
+            width = 400
+            #print ('size of original image', im.size)            
+
+            ratio = float(width)/im.size[0]
+            height = int(im.size[1]*ratio)
+            
+            #print("height={0} & width={1}".format(height, width))
+            nim = im.resize( (width, height), Image.BILINEAR )						
+            #print ('nim1=',nim.size)
                                                 
             page_layout.add(Paragraph(rec['filename'], horizontal_alignment=Alignment.CENTERED))
             page_layout.add(
