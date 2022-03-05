@@ -566,9 +566,17 @@ def delete_inspection():
     try:  
         
         col = db["inspectionResult"]
+        delete_log_col = db["Delete_Log"]
         _id = content['_id']
 
         query =  { "_id": _id}
+
+        updated_by = "development@heroku" if session.get("email") == None else session.get("email")
+                
+        existing_inspectionResult = col.find_one(query)
+        delete_log_col.insert_one( { "_id": str(uuid.uuid4()), 
+        "updated_by" : updated_by, "time":datetime.now(timezone.utc),"doc_type":  "Inspection Result", "rec" : existing_inspectionResult })
+
         result = col.delete_one(query)
         if result.deleted_count > 0:
             return  "OK", 200 
@@ -949,7 +957,7 @@ def genReport(psWS, psRptDict, psRptFormat):
  
 
 
-#Version 23  3/3/22
+#Version 23  3/5/22
 @app.route('/printreport',methods=['POST'])
 @check_logged
 def printreport():     
