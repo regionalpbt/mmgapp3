@@ -575,7 +575,7 @@ def delete_inspection():
         updated_by = "development@heroku" if session.get("email") == None else session.get("email")               
         existing_inspectionResult = col.find_one(query)
         delete_log_col.insert_one( { "_id": str(uuid.uuid4()), 
-        "updated_by" : updated_by, "time":datetime.now(timezone.utc),"doc_type":  "Inspection Result", "rec" : existing_inspectionResult })
+        "updated_by" : updated_by, "time":datetime.now(timezone.utc),"doc_type": "inspectionResult", "rec" : existing_inspectionResult })
 
         result = col.delete_one(query)
         if result.deleted_count > 0:
