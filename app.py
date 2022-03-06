@@ -1470,14 +1470,20 @@ def createsharepointpdf():
                 _response = File.open_binary(ctx, file_url)
                 data = BytesIO(_response.content) 
                 
-                im = Image.open(data)            
+                # convert to dpi=300 and 400 pixels = 400px /72 = 5.5 inches on PDF A4 portait 
+                basewidth = 600 
+                img = Image.open(data) 
+                wpercent = (basewidth/float(img.size[0]))
+                hsize = int((float(img.size[1])*float(wpercent)))
+                img = img.resize((basewidth,hsize), Image.ANTIALIAS)
+                data2 = BytesIO()    
+                img.save(data2, dpi=(300,300),format=image_format(rec['filename']))
+                ##nim = Image.open(data2)     
                 
-                with zip_archive.open(rec['filename'], 'w') as _file:                    
-                    _packet = BytesIO()
+                with zip_archive.open(rec['filename'], 'w') as _file:                                        
                     print(f"processing {rec['filename']} with extension {rec['filename'].rsplit('.', 1)[1].upper()}")
-                    imageFormat = image_format(rec['filename'])                     
-                    im.save(_packet, format=imageFormat, dpi=(300, 300), size=(400, 400))
-                    _file.write(_packet.getvalue())        
+                    imageFormat = image_format(rec['filename'])                             
+                    _file.write(data2.getvalue())        
                 _file.close
 
         #-------------------------------------------------------
@@ -1530,21 +1536,25 @@ def createsharepointpdf():
         for rec in sharePoint_array:
 
             #print('SharePoint files : ', rec['relative_path'])     
-
+            
             page = Page()
             pdf.append_page(page)
             page_layout = SingleColumnLayout(page)
 
+            
             file_url =  rec['relative_path']
             _response = File.open_binary(ctx, file_url)
             data = BytesIO(_response.content) 
 
-            # convert to 300 dpi and 400 pixels
-            im2 = Image.open(data) 
+            # convert to dpi=300 and 400 pixels = 400px /72 = 5.5 inches on PDF A4 portait 
+            basewidth = 600 
+            img = Image.open(data) 
+            wpercent = (basewidth/float(img.size[0]))
+            hsize = int((float(img.size[1])*float(wpercent)))
+            img = img.resize((basewidth,hsize), Image.ANTIALIAS)
             data2 = BytesIO()    
-            im2.save(data2, dpi=(300, 300),format=image_format(rec['filename']), size=(400, 400)) 
-            nim = Image.open(data2)                                    
-        
+            img.save(data2, dpi=(300,300),format=image_format(rec['filename']))
+            nim = Image.open(data2)                                            
                                                 
             page_layout.add(Paragraph(rec['filename'], horizontal_alignment=Alignment.CENTERED))
             page_layout.add(
