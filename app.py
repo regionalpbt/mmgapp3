@@ -317,14 +317,20 @@ def upload_file():
                         if file and allowed_file(file.filename):
                                 mimetype = file.content_type
                                 filename = file.filename   
-                                filename = secure_filename(filename)                                                              
-                                                              
+                                filename = secure_filename(filename)   
+                                                                                             
                                 target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
                                 ctx.execute_query()
 
                                 info = FileCreationInformation()
 
-                                info.content = file.read()                     
+                                info.content = file.read()        
+
+                                #enable below for control of each size of the file. 
+
+                                # if  len(info.content) >  1024 * 1024 * 1:    
+                                #     return f"The size of {file.filename} exceeds 2 MB limit !", 555                                                
+                                          
 
                                 if filename == "image.jpg":
                                     filename = "img-" +  str(uuid.uuid4()) + ".jpg"                          
@@ -349,9 +355,8 @@ def upload_file():
                 
                 return jsonify(newfiles),200
                           
-            except Exception as e:   
-                print (f'QA App error : {e}')
-                return f"The size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413
+            except Exception as e:    
+                return f"The total size of all files exceeds a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 400
 
             finally:
                pass
