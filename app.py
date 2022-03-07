@@ -78,6 +78,9 @@ from PIL import Image, ImageFont, ImageDraw
 # for zipping files
 from zipfile import ZipFile
 
+# for testing timer 
+import time 
+
 app = Flask(__name__, static_folder="frontend/build/static", template_folder="frontend/build")    #production 
     
 app.config['SECRET_KEY']= os.environ['SECRET_KEY']
@@ -1399,7 +1402,7 @@ def sharepointfiles():
 @check_logged
 def createsharepointpdf():       
 
-    try:        
+    try:              
         content = request.get_json() #python data     
         folder = content['folder']
         inspection_id = content['inspection_id']
