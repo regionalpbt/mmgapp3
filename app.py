@@ -206,7 +206,7 @@ def authorized():
         # Vincent added below:
         #print ("email", json.dumps(result.get("id_token_claims")))
         #print ("email", result.get("id_token_claims").get('email'))
-        session["email"] = result.get("id_token_claims").get('email')        
+        session["email"] = (result.get("id_token_claims").get('email')).lower()      
         _save_cache(cache)
     except ValueError:  # Usually caused by CSRF
         pass  # Simply ignore them
