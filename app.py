@@ -359,7 +359,7 @@ def upload_file():
                 return jsonify(newfiles),200
                           
             except Exception as e:    
-                return f"The total size of all files may exceed a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 400
+                return f"The total size of all files may exceed a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413                        
 
             finally:
                pass
