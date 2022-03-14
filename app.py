@@ -1206,7 +1206,7 @@ def printreport():
             "suName": colnameParty.find_one ( { "_id" : inspRecord["main"].get("su_no", " ") } )["party_name"], 
             "mfName" : colnameParty.find_one ( { "_id" : inspRecord["main"].get("mf_no"," ") } )["party_name"], 
             "inspRecordNo": inspID,
-            "brand" : (",".join(unique(inspRecord, "items", "label"))),
+            "brand" : inspRecord["misc"].get("label", " "),
             "inspType" : inspTypeLong,
             "inspDate": inspDate,
             "mcNo" : (",".join(unique(inspRecord, "items", "mc_no"))),
