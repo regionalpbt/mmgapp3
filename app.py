@@ -650,6 +650,29 @@ def getUserProfile():
        return "Error", 404 
 
 
+@app.route('/api/getMCtable',methods=['POST'])
+@check_logged
+def getMCtable():            
+  
+    content = request.get_json() #python data     
+    su = content['su']
+    mf  = content['mf']        
+     
+    #get MCs for the SU and MF only
+    query =  {  '$and': [ { 'su_no': { '$eq': su } }, { 'mf_no' : { '$eq': mf } } ]  }          
+    col = db["mcTable"]     
+                    
+    mc_array = []     
+    results = col.find(query)
+    for result in results:
+        result["_id"] = str(result["_id"])
+        mc_array.append(result) 
+    
+    session["mcTable"] = mc_array    
+
+    if len(mc_array) > 0: 
+        return  jsonify(mc_array), 200    
+    
 
 def establishSessionData():
 
@@ -681,23 +704,26 @@ def establishSessionData():
 
     sessionData["mfList"] = results["mf_list"]   
 
-    #get MC Table 
-    search = []        
-    for _filter in session['mfList']:
-        search.append(   {  '$and': [ { 'su_no': { '$eq': _filter['SU'] } }, { 'mf_no' : { '$eq': _filter['MF'] } } ]  } )         
+    # get MC Table 
+    # search = []        
+    # for _filter in session['mfList']:
+    #     search.append(   {  '$and': [ { 'su_no': { '$eq': _filter['SU'] } }, { 'mf_no' : { '$eq': _filter['MF'] } } ]  } )         
     
-    col = db["mcTable"]
+    # col = db["mcTable"]
 
-    query = {'$or' : search}        
-                    
-    mc_array = []     
-    results = col.find(query)
-    for result in results:
-        result["_id"] = str(result["_id"])
-        mc_array.append(result)
+    # query = {'$or' : search}        
+    #                
+    # mc_array = []     
+    # results = col.find(query)
+    # for result in results:
+    #     result["_id"] = str(result["_id"])
+    #     mc_array.append(result)
+    #      
+    ##sessionData["mcTable"] = mc_array
+    ## session["mcTable"] = mc_array    
 
-    sessionData["mcTable"] = mc_array
-    session["mcTable"] = mc_array    
+    sessionData["mcTable"] = ""  
+    session["mcTable"] = ""  
 
     #get Party Table 
     search = []        
