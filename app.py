@@ -613,12 +613,22 @@ def searchInspMC():
         search.append(   {  '$and': [ { 'main.su_no': { '$eq': _filter['SU'] } }, { 'main.mf_no' : { '$eq': _filter['MF'] } } ]  } )        
 
       
-    query = {  '$and': [ {
+    query =   {
        "_id.mc" : {
        "$regex": mc,
        "$options" :'i' # case-insensitive
-       } },  { '$or' : search}]}
+       } }
      
+    ## 3/32/2022 - Removed below by Vincent    
+    # query = {  '$and': [ {
+    #    "_id.mc" : {
+    #    "$regex": mc,
+    #    "$options" :'i' # case-insensitive
+    #    } },  { '$or' : search}]}
+    
+
+
+
     #print(search, '$$search')     
 
     ##results = col.find(query).limit(5)    
