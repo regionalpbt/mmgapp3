@@ -1260,7 +1260,7 @@ def printreport():
             "qtyDict": qtyDict,
             "qtyDict2" : qtyDict2,
             "shipQty" : shipQtyTot,
-            "sampleSize": groupsum(inspRecord, "itemsTotal", "", "sample_qty")[0],
+            "inspQty": groupsum(inspRecord, "itemsTotal", "", "inspect_qty")[0],
             "acceptLevel": acceptLevel,
             "rejectLevel": rejectLevel,
             "criticalDefect": criticalDefect,
@@ -1286,6 +1286,7 @@ def printreport():
             "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
 
         }
+
         result = genReport(ws, report, rpt)
 
         #Output in Heroku:        
