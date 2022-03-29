@@ -1001,7 +1001,7 @@ def genReport(psWS, psRptDict, psRptFormat):
  
 
 
-#Version 23  3/5/22
+#Version 25  3/28/22
 @app.route('/printreport',methods=['POST'])
 @check_logged
 def printreport():     
