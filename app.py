@@ -1002,7 +1002,7 @@ def genReport(psWS, psRptDict, psRptFormat):
  
 
 
-#Version 25  3/28/22
+#Version 26  4/1/22
 @app.route('/printreport',methods=['POST'])
 @check_logged
 def printreport():     
@@ -1283,10 +1283,11 @@ def printreport():
             "cartonTotal": inspRecord["misc"].get("carton_total", ""),
             "rightHeader": InspBy,
             "leftFooter": footer,
-            "expandRow" : [["C24", 23, 25], ["B57", 57, 68]],
+            "expandRow" : [["C24", 23, 26], ["B57", 57, 68]],
             "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
-
         }
+
+
 
         result = genReport(ws, report, rpt)
 
