@@ -1111,20 +1111,24 @@ def printreport():
         inspID = inspMcno + "-" + inspIter + "-" + inspType
 
         #Prepare figures for Order No, Order Qty and Ship Qty
-        orderQtyLst = groupsum(inspRecord, "items", "po_no", "order_qty")
-        shipQtyTot = groupsum(inspRecord, "itemsTotal", "", "ship_qty")[0]
-        qtyDict = {"poNo": [], "orderQty": []}
-        qtyDict2 = {"poNo": [], "orderQty": []}
+        orderQtyLst = groupsum(inspRecord, "poList", "po_no", "order_qty")
+        shipQtyLst = groupsum(inspRecord, "itemsTotal", "po_no", "ship_qty")
+        qtyDict = {"poNo": [], "orderQty": [], "shipQty": []}
+        qtyDict2 = {"poNo": [], "orderQty": [], "shipQty": []}
         i = 0
         for orderQtyItem in orderQtyLst:
             i += 1
-            if i <= 10:
-                qtyDict["poNo"].append(orderQtyItem[0])
-                qtyDict["orderQty"].append(orderQtyItem[1])
-                        
-            else:
-                qtyDict2["poNo"].append(orderQtyItem[0])
-                qtyDict2["orderQty"].append(orderQtyItem[1])
+            for shipQtyItem in shipQtyLst:
+                if orderQtyItem[0] == shipQtyItem[0]:
+                    if i <= 10:
+                            qtyDict["poNo"].append(shipQtyItem[0])
+                            qtyDict["orderQty"].append(orderQtyItem[1])
+                            qtyDict["shipQty"].append(shipQtyItem[1])
+                    else:
+                            qtyDict2["poNo"].append(shipQtyItem[0])
+                            qtyDict2["orderQty"].append(orderQtyItem[1])
+                            qtyDict2["shipQty"].append(shipQtyItem[1]) 
+
 
         # Preapre figures for Critical, Major, Minor, Total Defect, Accept Level, Reject Level and Visual Result
         criticalDefect = ""
@@ -1238,7 +1242,7 @@ def printreport():
         #footer = "Inspection ID: " + inspID + " \n " + "Print Date: " + datetime.now().strftime('%m/%d/%YYYY %H:%M:%S')
         footer = "Inspection ID: " + inspID + " \n " + "Print Date: " + localPrintTime
         # dictionary for the output.  key in this dictionary must match the key the collection: excelMapping
-        #         
+
         report = {
             "suNo" : inspRecord["main"].get("su_no", " "),
             "mfNo" : inspRecord["main"].get("mf_no", " "),
@@ -1262,7 +1266,6 @@ def printreport():
             "inspector" : inspName,
             "qtyDict": qtyDict,
             "qtyDict2" : qtyDict2,
-            "shipQty" : shipQtyTot,
             "inspQty": groupsum(inspRecord, "itemsTotal", "", "inspect_qty")[0],
             "acceptLevel": acceptLevel,
             "rejectLevel": rejectLevel,
@@ -1288,8 +1291,6 @@ def printreport():
             "expandRow" : [["C24", 23, 26], ["B57", 57, 68]],
             "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
         }
-
-
 
         result = genReport(ws, report, rpt)
 
