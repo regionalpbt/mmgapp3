@@ -476,6 +476,7 @@ def save_inspection():
     checkList = content['checkList']
     items = content['items']
     itemsTotal = content['itemsTotal'] 
+    poList = content['poList'] 
 
     defects = content['defects']
     uploads = content['uploads']
@@ -503,7 +504,8 @@ def save_inspection():
 
     update_history.append(update_current)    
        
-    new_content = { "_id" : _id, "main" : main,  "misc" : misc,  "checkList" : checkList, "items" : items, "itemsTotal" : itemsTotal, "defects": defects,    "uploads":uploads, "update_history" : update_history }
+    new_content = { "_id" : _id, "main" : main,  "misc" : misc,  "checkList" : checkList, "items" : items, "itemsTotal" : itemsTotal, 
+    "poList" : poList,  "defects": defects,    "uploads":uploads, "update_history" : update_history }
   
     col = db["inspectionResult"]
 
@@ -522,7 +524,7 @@ def save_inspection():
 
     if (exists):
         change =  { "$set":  {  "main" : main, "misc": misc, "checkList" : checkList, "items" : items, 
-        "itemsTotal" : itemsTotal,   "defects":defects, "uploads" : uploads, "update_history": update_history} }    # change     
+        "itemsTotal" : itemsTotal, "poList" : poList, "defects":defects, "uploads" : uploads, "update_history": update_history} }    # change     
         col.update_one(query, change)
         return "ok",200
     else:        
