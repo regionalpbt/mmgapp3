@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 #below are additionals for React JS
-#import pymongo
+import pymongo
 from pymongo import MongoClient
 from pymongo.errors import OperationFailure
 
@@ -1695,18 +1695,27 @@ def pastXdaysResult():
         
     content = request.get_json() #python data     
     #mc = content['mc']
-    #print("mc", mc)
+    #print("mc", mc) 
+
+    user =""
+    query_filter =""
+    if session.get('user'):   ##  prod
+        user = session['user']['email']
+        query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else  {"misc.mqa" : user} 
+    else:
+        user = "vincent.cheng@macys.com"
+        query_filter =  {"misc.mqa" : user} 
     
-    col = db["inspectionResult"]   
-    query = {}   
-    aqlTable = []        
-    results = col.find(query).limit(10)     
+    col = db["inspectionResult"]                 
+    #query_col = {"_id":1, "main.inspection_date" : 1}
+    query_sort = [  ("main.inspection_date",pymongo.DESCENDING), ("_id",pymongo.ASCENDING)]
+    #results = col.find( query_filter, query_col).sort(query_sort)
+    results = col.find( query_filter).sort(query_sort).limit(100)
 
     id_array = []
     for result in results:
         result["id"] = uuid.uuid4()        
         id_array.append(result)        
-
             
     if (results):
        return  jsonify(id_array), 200 
@@ -1717,7 +1726,6 @@ def pastXdaysResult():
 ############################################################### 
 #  Past X days inspection - End
 ############################################################### 
-
 
 
 def convert_size(size_bytes):
