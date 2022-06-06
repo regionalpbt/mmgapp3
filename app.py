@@ -1701,8 +1701,10 @@ def pastXdaysResult():
     query_filter =""
     if session.get('user'):   ##  prod
         user = session['user']['email']
+        user = user.lower()       
         query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else  {"misc.mqa" : user} 
     else:
+        print ('user',user)
         user = "vincent.cheng@macys.com"
         query_filter =  {"misc.mqa" : user} 
     
