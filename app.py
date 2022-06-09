@@ -135,6 +135,7 @@ def check_logged(f):
                 return jsonify( 
                 token=f'{"Invalid Sesssion"}' 
                 ), 501
+            print(f"current user : { session['email'].lower() }")        
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
@@ -270,7 +271,7 @@ def getTodayDate():
     return date.today().strftime("%m/%d/%y")  ## get today's date 
 
 
-ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'doc', 'docx', 'ppt', 'pptx'])
+ALLOWED_EXTENSIONS = set(['pdf', 'png', 'jpg', 'jpeg', 'xlsx', 'doc', 'docx', 'ppt', 'pptx', 'zip'])
 
 def allowed_file(filename):
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -297,75 +298,94 @@ def image_format(filename):
 @check_logged
 def upload_file():
         
-        if request.method == 'POST':
+  if request.method == 'POST':
               
             try:    
                 # inspection_id = '225233-1-F' 
                 # relative_url =  "2022inspRpt/SU22975MF36843"
+              
+
                 inspection_id = request.headers['inspection_id']
                 relative_url =  request.headers['relative_url']
                 inspection_date =  request.headers['inspection_date']
-                
-                #print('Upload/Inspection_id is {0}, {1}, {2}'.format(inspection_id, su_no, mf_no))   
-                
+    
+                #print('Upload/Inspection_id is {0}, {1}, {2}'.format(inspection_id, su_no, mf_no))                   
                 # check if the post request has the files part
                 if 'files[]' not in request.files:
                         #flash('No file part')
                         return "no files", 406
-                files = request.files.getlist('files[]')                
+              
+                files = request.files.getlist('files[]')      
+                print('files', files)
+              
                 newfiles = []
 
                 for file in files:                           
-           
-                        if file and allowed_file(file.filename):
-                                mimetype = file.content_type
-                                filename = file.filename   
-                                filename = secure_filename(filename)   
-                                                                                             
-                                target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)
-                                ctx.execute_query()
+                    
+                    # file.seek(0, os.SEEK_END)
+                    # file_length = file.tell()
+                    # print('file.length', file_length)
 
-                                info = FileCreationInformation()
+                    if file and allowed_file(file.filename):                                
 
-                                info.content = file.read()        
+                        mimetype = file.content_type
+                        filename = file.filename                      
+                        filename = secure_filename(filename)   
+                        print('filename*',filename)
 
-                                #enable below for control of each size of the file. 
+                        target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)                        
+                        ctx.execute_query()
+                        
+                        info = FileCreationInformation()                        
+                        info.content = file.read()        
+                        #enable below for control of each size of the file. 
 
-                                # if  len(info.content) >  1024 * 1024 * 1:    
-                                #     return f"The size of {file.filename} exceeds 2 MB limit !", 555                                                
-                                          
+                        # if  len(info.content) >  1024 * 1024 * 1:    
+                        #     return f"The size of {file.filename} exceeds 2 MB limit !", 555                                                                            
+                        if filename == "image.jpg":
+                            filename = "img-" +  str(uuid.uuid4()) + ".jpg"                          
 
-                                if filename == "image.jpg":
-                                    filename = "img-" +  str(uuid.uuid4()) + ".jpg"                          
+                        info.url = filename                                  
+                        info.overwrite = True                                
+                        upload_file = target_folder.files.add(info)             
+                   
+                        # from office import background_task                         
+                        # job = q.enqueue(background_task, ctx, upload_file,inspection_id, inspection_date,session["userName"])                                                  
+                        # q_len = len(q)               
+                        # print(f"job : {job.result} and len : {q_len} and job is finished : {job.is_finished}")   
+                        ctx.execute_query()
 
-                                info.url = filename  
+                   
+                        list_item = upload_file.listItemAllFields # get associated list item                                 
+                        list_item.set_property("Inspection_x0020_ID", inspection_id)
+                        list_item.set_property("Inspection_x0020_Date", inspection_date)                              
+                        list_item.set_property("Last_x0020_Editor", session["userName"])
+                        list_item.update()                                
+                        ctx.execute_query()         
+
+                        
+                        #ctx.execute_query()              
+                        #Once file is uploaded, it's metadata could be set like this    
+                        
+                        #newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
+                       
+                        # return jsonify(newfiles),200
+                    else:
+                        return f"Your file type is not allowed", 500
+
+                return "OK",200
                                 
-                                info.overwrite = True
-                                upload_file = target_folder.files.add(info)
-                                ctx.execute_query()
-
-                                #Once file is uploaded, it's metadata could be set like this
-                                
-                                list_item = upload_file.listItemAllFields # get associated list item 
-                                list_item.set_property("Inspection_x0020_ID", inspection_id)
-                                list_item.set_property("Inspection_x0020_Date", inspection_date)                              
-                                list_item.set_property("Last_x0020_Editor", session["userName"])
-                                
-                                list_item.update()
-                                ctx.execute_query()
-
-                                newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
-                
-                return jsonify(newfiles),200
-                          
             except Exception as e:    
-                return f"The total size of all files may exceed a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413                        
+               print(e)
+               return f"The total size of all files may exceed a size limit of {os.environ['UPLOAD_MAX_SIZE']} bytes!", 413                        
 
             finally:
                pass
 
-        else:
-               return "Upload Error", 406
+  else:
+    return "Upload Error", 406
+
+
 
 @app.route('/download/<string:_id>', methods=['GET'])
 @check_logged
@@ -1407,21 +1427,21 @@ def sharepointfiles():
             #print('id', list_item.file.unique_id)
             sharePoint_array.append(sharePoint_items)
 
-        if (sharePoint_array == []): 
-            ## No files on SharePoint
-            sharePoint_items = {
-                "folder":None, 
-                "filename": 'No files',
-                "inspection_id": None,
-                "modified":datetime.now(timezone.utc),
-                "editor":None,
-                "size": None,
-                "url" :None,
-                "relative_path" : None,
-                "unique_id": None,
-                "last_editor": None 
-            } 
-            sharePoint_array.append(sharePoint_items)
+        # if (sharePoint_array == []): 
+        #     ## No files on SharePoint
+        #     sharePoint_items = {
+        #         "folder":None, 
+        #         "filename": 'No files',
+        #         "inspection_id": None,
+        #         "modified":datetime.now(timezone.utc),
+        #         "editor":None,
+        #         "size": None,
+        #         "url" :None,
+        #         "relative_path" : None,
+        #         "unique_id": None,
+        #         "last_editor": None 
+        #     } 
+        #     sharePoint_array.append(sharePoint_items)
        
         return  jsonify(sharePoint_array), 200         
 

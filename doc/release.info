@@ -1,1 +1,4 @@
-Release 2022.83 - Add Governance SQA Iteration and Packing Result N/A
+Release 2022.85
+- Add user to each request, support synchronous file upload 
+- Check extension 
+- SharePoint zero files
