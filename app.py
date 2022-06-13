@@ -354,21 +354,17 @@ def upload_file():
                         # q_len = len(q)               
                         # print(f"job : {job.result} and len : {q_len} and job is finished : {job.is_finished}")   
                         ctx.execute_query()
-
-                   
+ 
                         list_item = upload_file.listItemAllFields # get associated list item                                 
                         list_item.set_property("Inspection_x0020_ID", inspection_id)
                         list_item.set_property("Inspection_x0020_Date", inspection_date)                              
                         list_item.set_property("Last_x0020_Editor", session["userName"])
                         list_item.update()                                
                         ctx.execute_query()         
-
                         
                         #ctx.execute_query()              
-                        #Once file is uploaded, it's metadata could be set like this    
-                        
-                        #newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })
-                       
+                        #Once file is uploaded, it's metadata could be set like this                            
+                        #newfiles.append({ "_id" :str(id), "enable": True, "file_name":filename, "mime_type": mimetype })                       
                         # return jsonify(newfiles),200
                     else:
                         return f"Your file type is not allowed", 500
@@ -477,7 +473,6 @@ def getCriticalDefects():
 def check_duplicate_inpsection_id():
     content = request.get_json() #python data 
     _id = content['_id']
-
     col = db["inspectionResult"]
     query =  { "_id": _id}
     exists = col.find_one(query)
@@ -1358,13 +1353,13 @@ def sharepointfiles():
         folder = content['folder']
         inspection_id = content['inspection_id']
         
-        ## below are okay 
-        sharePointReport = "9999 Inspection Report"
-        relative_url = "9999InspRpt" + "/" + folder
+        # ## below are for testing 
+        sharePointReport = "2022 Inspection Report"
+        relative_url = "2022InspRpt" + "/" + folder
 
         ## below are getting from environment 
-        sharePointReport = os.environ['SHAREPOINT_REPORT']
-        relative_url = os.environ['SHAREPOINT_PATH'] + "/" + folder        
+        # sharePointReport = os.environ['SHAREPOINT_REPORT']
+        # relative_url = os.environ['SHAREPOINT_PATH'] + "/" + folder        
                 
         libraryRoot = ctx.web.get_folder_by_server_relative_path(relative_url)
 
@@ -1722,9 +1717,8 @@ def pastXdaysResult():
     if session.get('user'):   ##  prod
         user = session['user']['email']
         user = user.lower()       
-        query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else  {"misc.mqa" : user} 
-    else:
-        print ('user',user)
+        query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else {'$and' : [  { 'misc.mqa' : { '$eq' : user }},  {'misc.qa_type' : { '$eq' : "MQA"}}]}        
+    else:        
         user = "vincent.cheng@macys.com"
         query_filter =  {"misc.mqa" : user} 
     

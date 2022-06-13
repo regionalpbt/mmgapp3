@@ -1,4 +1,5 @@
-Release 2022.85
+Release 2022.85.1
 - Add user to each request, support synchronous file upload 
 - Check extension 
-- SharePoint zero files
+- SharePoint handle zero files
+- Fix QA entry - must not be left blank
