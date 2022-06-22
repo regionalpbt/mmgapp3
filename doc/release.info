@@ -1,5 +1,12 @@
+Release 2022.85.3
+- Add CAP and adjust the size of major and minor
+
+Release 2022.85.2
+- Add Exception hanlding in getting a ist of SharePoint site users
+
 Release 2022.85.1
 - Add user to each request, support synchronous file upload 
 - Check extension 
 - SharePoint handle zero files
 - Fix QA entry - must not be left blank
+

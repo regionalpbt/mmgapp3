@@ -795,20 +795,25 @@ def establishSessionData():
 
     # get SharePoint site - https://macysinc.sharepoint.com/sites/OSO/_api/Web/siteusers
 
-    _request = RequestOptions("{0}/_api/web/siteusers".format(site_url))
-    _response = ctx.execute_request_direct(_request)
-    _content_all = json.loads(_response.content)
-    siteUsers = []
-    for item in _content_all['d']['results']: 
-        _username = item['Title']
-        _email = item['Email']
-        _id = item['Id']
-        siteUser = { 
-                "id":_id,                
-                "username": _username,
-                "email": _email               
-            } 
-        siteUsers.append(siteUser)
+    try: 
+
+        _request = RequestOptions("{0}/_api/web/siteusers".format(site_url))
+        _response = ctx.execute_request_direct(_request)
+        _content_all = json.loads(_response.content)
+        siteUsers = []
+        for item in _content_all['d']['results']: 
+            _username = item['Title']
+            _email = item['Email']
+            _id = item['Id']
+            siteUser = { 
+                    "id":_id,                
+                    "username": _username,
+                    "email": _email               
+                } 
+            siteUsers.append(siteUser)
+    
+    except Exception as e:        
+        print(f"***Error getting site user list from SharePoint***, {str(e)}")
 
     session["siteUsers"] = siteUsers     
     sessionData["sharePointPath"] = os.environ['SHAREPOINT_PATH']
