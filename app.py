@@ -329,9 +329,10 @@ def upload_file():
                     if file and allowed_file(file.filename):                                
 
                         mimetype = file.content_type
-                        filename = file.filename                      
-                        filename = secure_filename(filename)   
-                        print('filename*',filename)
+                        filename = file.filename    
+                        
+                        # 6/23/22 remove below as secure_filename removes non-ascii characters.
+                        # filename = secure_filename(filename)                          
 
                         target_folder = ctx.web.get_folder_by_server_relative_path(relative_url)                        
                         ctx.execute_query()
@@ -796,7 +797,6 @@ def establishSessionData():
     # get SharePoint site - https://macysinc.sharepoint.com/sites/OSO/_api/Web/siteusers
 
     try: 
-
         _request = RequestOptions("{0}/_api/web/siteusers".format(site_url))
         _response = ctx.execute_request_direct(_request)
         _content_all = json.loads(_response.content)
@@ -813,7 +813,9 @@ def establishSessionData():
             siteUsers.append(siteUser)
     
     except Exception as e:        
+        sessionData = None        
         print(f"***Error getting site user list from SharePoint***, {str(e)}")
+        return sessionData
 
     session["siteUsers"] = siteUsers     
     sessionData["sharePointPath"] = os.environ['SHAREPOINT_PATH']

@@ -1,3 +1,9 @@
+Release 2022.87
+- Add validation on sessiondata for empty sharepoint userlist. It returns error if no userlist.
+
+Release 2022.86
+- remove secure_filename to allow Chinese characters  
+
 Release 2022.85.3
 - Add CAP and adjust the size of major and minor
 
