@@ -1,3 +1,6 @@
+Release 2022.88
+- Protect Governance section if type is SQA and correct upload error message
+
 Release 2022.87
 - Add validation on sessiondata for empty sharepoint userlist. It returns error if no userlist.
 
