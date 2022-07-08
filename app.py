@@ -81,6 +81,10 @@ from zipfile import ZipFile
 # for testing timer 
 import time 
 
+# for past inspection result  
+import dateutil.parser
+import datetime as datetime2
+
 app = Flask(__name__, static_folder="frontend/build/static", template_folder="frontend/build")    #production 
     
 app.config['SECRET_KEY']= os.environ['SECRET_KEY']
@@ -1720,28 +1724,63 @@ def pastXdaysResult():
     #print("mc", mc) 
 
     user =""
-    query_filter =""
-    if session.get('user'):   ##  prod
+    if session.get('user'):   ##  production environment 
         user = session['user']['email']
-        user = user.lower()       
-        query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else {'$and' : [  { 'misc.mqa' : { '$eq' : user }},  {'misc.qa_type' : { '$eq' : "MQA"}}]}        
+        user = user.lower()               
     else:        
         user = "vincent.cheng@macys.com"
-        query_filter =  {"misc.mqa" : user} 
-    
-    col = db["inspectionResult"]                 
-    #query_col = {"_id":1, "main.inspection_date" : 1}
-    query_sort = [  ("main.inspection_date",pymongo.DESCENDING), ("_id",pymongo.ASCENDING)]
-    #results = col.find( query_filter, query_col).sort(query_sort)
-    results = col.find( query_filter).sort(query_sort).limit(100)
 
-    id_array = []
-    for result in results:
-        result["id"] = uuid.uuid4()        
-        id_array.append(result)        
+    ## build a mf_list for the current user. 
+    col = db["userProfile"]
+    query = {'email' : user}
+    result = col.find(query) 
+    mf_list = []
+    for rec in result[0]['mf_list']:
+        mf_list.append({'MF' : rec['MF']})
+
+    col = db["inspectionResult"]
+    search = []
+
+    # Getting the 1st day of last month
+    today = datetime2.date.today()
+    first = today.replace(day=1)
+    lastMonth = first - datetime2.timedelta(days=1)
+    firstLastMonth = lastMonth.replace(day=1)
+
+    # print(firstLastMonth.strftime("%D"))
+    # print(firstLastMonth.strftime("%Y%m"))
+
+    firstLastMonthISO = firstLastMonth.strftime("%Y-%m-%dT%H:%M:%SZ") 
+    firstLastMonthISOString = dateutil.parser.parse(firstLastMonthISO)
+    for filter in mf_list:
+        search.append(   {  '$and': [         
+            { 'main.mf_no' : { '$eq': filter['MF'] } },
+            { 'main.inspection_date' : { '$gt' : firstLastMonthISOString } }       
+        ]  } )        
+    
+    query = {'$or' : search}
+    #results = col.find(query).limit(15)
+    results = col.find(query)
+
+    query_sort = [  ("main.inspection_date",pymongo.DESCENDING), ("_id",pymongo.ASCENDING)]    
+    #results = col.find( query_filter).sort(query_sort).limit(100)
+    results = col.find(query).sort(query_sort)
+    
+    # query_filter =""
+    # if session.get('user'):   ##  prod
+    #     user = session['user']['email']
+    #     user = user.lower()       
+    #     query_filter =  {"misc.sqa" : user} if  "@macys.com" not in session.get('email').lower() else {'$and' : [  { 'misc.mqa' : { '$eq' : user }},  {'misc.qa_type' : { '$eq' : "MQA"}}]}        
+    # else:        
+    #     user = "henry.khut@macys.com"
+    #     query_filter =  {"misc.mqa" : user} 
+
+    inspection_array = []
+    for result in results:    
+         inspection_array.append(result)        
             
     if (results):
-       return  jsonify(id_array), 200 
+       return  jsonify({"pastInspections" : inspection_array, "user" : user}), 200 
     else:
        return "Error", 404 
 
