@@ -1,3 +1,13 @@
+Release 2022.92
+- Change Inspection Date to String  
+- Ready for data conversion (with a script for conversion)
+- Fix 1st of a month inspections not being displayed properly  
+- Define Dabatbase schema 
+- Change Inspection Report's inspection date 
+
+Release 2022.91
+- Attempt to solve time zone problem.   
+
 Release 2022.90
 - Refine past inspection days page to have more filters
 

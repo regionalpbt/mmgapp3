@@ -91,7 +91,9 @@ app.config['SECRET_KEY']= os.environ['SECRET_KEY']
 
 cluster = MongoClient(os.environ['MONGODB_URL'], tls=True, tlsAllowInvalidCertificates=True,  maxPoolSize=100)
 
-db = cluster["qcDB"]
+database = os.environ['DATABASE']
+
+db = cluster[database]
 
 site_url = 'https://macysinc.sharepoint.com/sites/OSO/'
 app_principal = {
@@ -515,7 +517,8 @@ def save_inspection():
     # Convert dictionary object into string, this is for change tracking only
     misc_str = json.dumps(misc)   
     
-    main['inspection_date'] = parser.parse(main['inspection_date'])
+    #main['inspection_date'] = parser.parse(main['inspection_date'])
+    main['inspection_date'] = main['inspection_date']
         
     if (update_history ==[]) :        
         update_current = { "id" :  str(uuid.uuid4()), "misc" :misc_str,  "updated_by" : updated_by, "updated_time" : updated_time, "updated_mode" : "create"}
@@ -717,11 +720,12 @@ def establishSessionData():
     #this forces the mf_list to be generated from profile only, not API requests.   
     
     session["userName"] = f"{results['first_name']} {results['last_name']}"
-    session["mfList"] = results["mf_list"]
-
+    session["mfList"] = results["mf_list"]   
         
     sessionData["userProfile"] = {"email" : results["email"], "first_name" : results["first_name"], "ignore_submit": results["ignore_submit"],
-    "environment":  os.environ["ENVIRONMENT"] }    
+    "environment":  os.environ["ENVIRONMENT"], 
+    "databaseSchema":  "dev" if database[:3].lower() == "dev" else "prod"    
+     }    
 
     sessionData["mfList"] = results["mf_list"]   
 
@@ -860,7 +864,7 @@ def establishSessionData():
     col = db["metaTable"]
     query = {'category': "inspType"}
     results = col.find_one(query)    
-    sessionData["inspType"] = results['selectionList']     
+    sessionData["inspType"] = results['selectionList']        
         
     return sessionData
 
@@ -1054,7 +1058,7 @@ def printreport():
 
     try:
 
-        db = cluster["qcDB"]
+        #db = cluster["qcDB"]
         colname = db["inspectionResult"]       
         colnameParty = db["partyTable"]        
         colnameExcelMap = db["fileDirectory"]
@@ -1145,12 +1149,11 @@ def printreport():
 
 
         # Preapre figures for Critical, Major, Minor, Total Defect, Accept Level, Reject Level and Visual Result
-        criticalDefect = ""
-        majorDefect = ""
-        minorDefect = ""
-        totalDefect = ""
-        acceptLevel = ""
-        rejectLevel = ""
+        criticalDefect = 0
+        majorDefect = 0
+        minorDefect = 0
+        acceptLevel = 0
+        rejectLevel = 0
         visualResult = ""
         if "visual_result" in inspRecord["misc"]:
             defectString = inspRecord["misc"]["visual_result"].get("defective_result", "")
@@ -1160,11 +1163,11 @@ def printreport():
                 criticalDefect = int(defectString [:defectString.find("/")])
                 majorDefect = int(defectString[defectString.find("/")+1 :defectString.find("/", defectString.find("/")+1)])
                 minorDefect = int(defectString[-((len(defectString) -1 ) - defectString.find("/", defectString.find("/")+ 1)):])
-                totalDefect = criticalDefect + majorDefect + math.floor(minorDefect / 4)
 
             if len(thresholdString) > 0:
                 acceptLevel = int(thresholdString[:thresholdString.find("/")])
                 rejectLevel = int(thresholdString[-((len(thresholdString) - 1) - thresholdString.find("/")):])
+
 
         # Prepare data for each checklist items.  chkDict1 in left section, ckhDict2 in middle and chkDict3 in the right section
         chkDict1 = { "result": []}
@@ -1248,7 +1251,7 @@ def printreport():
 
         # Get the Inspection Date
         if "inspection_date" in inspRecord["main"]:
-            inspDate = inspRecord["main"]["inspection_date"].strftime("%m/%d/%Y")
+            inspDate = inspRecord["main"]["inspection_date"]
         else:
             inspDate = "-"
 
@@ -1287,7 +1290,6 @@ def printreport():
             "criticalDefect": criticalDefect,
             "majorDefect": majorDefect,
             "minorDefect": minorDefect,
-            "totalDefect": totalDefect,
             "visualResult": visualResult,
             "packingResult": inspRecord["misc"].get("packing_result", ""),
             "measureResult": inspRecord["misc"].get("measurement_result", ""),
@@ -1305,7 +1307,6 @@ def printreport():
             "leftFooter": footer,
             "expandRow" : [["C24", 23, 26], ["B57", 57, 68]],
             "expandCol": [["T2", "T", "V"], ["X3", "Y", "Z"]]
-
         }
 
 
@@ -1744,18 +1745,22 @@ def pastXdaysResult():
     # Getting the 1st day of last month
     today = datetime2.date.today()
     first = today.replace(day=1)
-    lastMonth = first - datetime2.timedelta(days=1)
-    firstLastMonth = lastMonth.replace(day=1)
+    lastDayLastMonth = first - datetime2.timedelta(days=1)
+    lastDay2MonthsAgo = lastDayLastMonth.replace(day=1)  - datetime2.timedelta(days=1)
+    #firstLastMonth = lastMonth.replace(day=1)
 
     # print(firstLastMonth.strftime("%D"))
     # print(firstLastMonth.strftime("%Y%m"))
 
-    firstLastMonthISO = firstLastMonth.strftime("%Y-%m-%dT%H:%M:%SZ") 
-    firstLastMonthISOString = dateutil.parser.parse(firstLastMonthISO)
+    #firstLastMonthISO = firstLastMonth.strftime("%Y-%m-%dT%H:%M:%SZ")     
+    #firstLastMonthISOString = dateutil.parser.parse(firstLastMonthISO)
+
+    lastDay2MonthsAgoISO =  lastDay2MonthsAgo.strftime("%Y-%m-%d")     
+
     for filter in mf_list:
         search.append(   {  '$and': [         
             { 'main.mf_no' : { '$eq': filter['MF'] } },
-            { 'main.inspection_date' : { '$gt' : firstLastMonthISOString } }       
+            { 'main.inspection_date' : { '$gt' : lastDay2MonthsAgoISO } }       
         ]  } )        
     
     query = {'$or' : search}
