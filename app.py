@@ -512,7 +512,7 @@ def save_inspection():
     if (session.get("email")):
          updated_by = session.get("email")
     else:
-         updated_by = "vincent.cheng@macys.com"
+         updated_by = "vincent.cheng@macys.com"   
     
     # Convert dictionary object into string, this is for change tracking only
     misc_str = json.dumps(misc)   
@@ -705,9 +705,9 @@ def establishSessionData():
     email =""
    
     if (os.environ['ENVIRONMENT']=="PROD"):
-        email = session['email']        
+        email = session['email']                
     else:       
-        email = "vincent.cheng@macys.com" 
+        email = "vincent.cheng@macys.com"         
              
     col = db["userProfile"]
 
@@ -1750,11 +1750,10 @@ def pastXdaysResult():
     first = today.replace(day=1)
     lastDayLastMonth = first - datetime2.timedelta(days=1)
     lastDay2MonthsAgo = lastDayLastMonth.replace(day=1)  - datetime2.timedelta(days=1)
-    #firstLastMonth = lastMonth.replace(day=1)
 
+    #firstLastMonth = lastMonth.replace(day=1)
     # print(firstLastMonth.strftime("%D"))
     # print(firstLastMonth.strftime("%Y%m"))
-
     #firstLastMonthISO = firstLastMonth.strftime("%Y-%m-%dT%H:%M:%SZ")     
     #firstLastMonthISOString = dateutil.parser.parse(firstLastMonthISO)
 
@@ -1770,9 +1769,11 @@ def pastXdaysResult():
     #results = col.find(query).limit(15)
     results = col.find(query)
 
-    query_sort = [  ("main.inspection_date",pymongo.DESCENDING), ("_id",pymongo.ASCENDING)]    
-    #results = col.find( query_filter).sort(query_sort).limit(100)
-    results = col.find(query).sort(query_sort)
+    query_col = {"_id":1, "main" : 1, "misc.final_result": 1, "misc.qa_type":1, "misc.mqa":1, "misc.sqa":1}
+
+    query_sort = [  ("main.inspection_date",pymongo.DESCENDING), ("_id",pymongo.ASCENDING)]           
+    results = col.find(query, query_col).sort(query_sort)
+    #results = col.find(query)    
     
     # query_filter =""
     # if session.get('user'):   ##  prod

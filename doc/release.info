@@ -1,3 +1,14 @@
+Release 2022.99
+- Fix past insepction day page by solving sorting issue
+
+Release 2022.98  
+- Fix React Start Up Problem 
+- Set QA Type Automatically based on login
+
+Release 2022.97 (W)
+- Fix inspection date on SharePoint 
+- React 17 root and spinner problem remained
+
 Release 2022.93
 - Fix inspection date on SharePoint 
 

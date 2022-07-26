@@ -21,9 +21,16 @@ npm install react-loader-spinner --save
 npm install react-promise-tracker --save
 npm install react-router-dom 
 
+npm install react-datepicker --save
+npm install axios
+
 # Additional Python library  
 pip install python-dateutil - for converting data text to date object.
 
+# when problem occurs like seeing message :  options.allowedHosts[0] should be a non-empty string.
+  please change to "react-scripts": "4.0.3" in package.json 
+  remove node_modules directory     
+  then running npm i 
 
 * Starts the development server.
   npm run build
